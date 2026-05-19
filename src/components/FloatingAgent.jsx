@@ -26,13 +26,15 @@ const INTERACTIVE_SELECTOR = [
 
 const CHASE_LERP = 0.045;
 
-export function FloatingAgent({ mood }) {
+export function FloatingAgent({ mood, hidden }) {
   const wrapRef = useRef(null);
   const target = useRef({ x: 0, y: 0 });
   const pos = useRef({ x: 0, y: 0 });
   const seeded = useRef(false);
   const [overInteractive, setOverInteractive] = useState(false);
   const [ready, setReady] = useState(false);
+
+  if (hidden) return null;
 
   useEffect(() => {
     const seed = () => {

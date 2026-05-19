@@ -37,16 +37,6 @@ export function Landing({ prompt, setPrompt, chips, setChips, onSend, onPickSugg
 
       <PromptBox value={prompt} setValue={setPrompt} chips={chips} setChips={setChips} onSend={onSend} thinking={false} />
       <Suggestions onPick={onPickSuggestion} />
-
-      <div className="marquee" style={{ marginTop: 48 }}>
-        <div className="marquee-track">
-          {Array.from({ length: 2 }).map((_, k) => (
-            <span key={k}>
-              ✈️ flights <span className="sep">·</span> 🏨 hotels <span className="sep">·</span> 🏡 airbnbs <span className="sep">·</span> 🚗 rentals <span className="sep">·</span> 🚆 trains <span className="sep">·</span> 🚌 buses <span className="sep">·</span> 🍽️ dinner res <span className="sep">·</span> 🎟️ tickets <span className="sep">·</span> 🌅 vibes <span className="sep">·</span>
-            </span>
-          ))}
-        </div>
-      </div>
     </>
   );
 }

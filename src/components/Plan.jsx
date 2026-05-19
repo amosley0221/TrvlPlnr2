@@ -3,6 +3,132 @@ import { fmtMoney, SWAP_OPTIONS } from "../data/trips.js";
 import { DUFFEL_OFFER, BOOKING_HOTEL } from "../data/api.js";
 import { jsonHighlight } from "./Pipeline.jsx";
 
+function vendorHost(vendor, icon) {
+  const v = (vendor || "").toLowerCase();
+  const map = [
+    ["jetblue", "jetblue.com"],
+    ["united", "united.com"],
+    ["delta", "delta.com"],
+    ["american", "aa.com"],
+    ["ana", "ana.co.jp"],
+    ["air france", "airfrance.com"],
+    ["singapore", "singaporeair.com"],
+    ["tap", "flytap.com"],
+    ["aeroméxico", "aeromexico.com"],
+    ["spirit", "spirit.com"],
+    ["airbnb", "airbnb.com"],
+    ["booking", "booking.com"],
+    ["hertz", "hertz.com"],
+    ["avis", "avis.com"],
+    ["enterprise", "enterprise.com"],
+    ["jr", "japanrailpass.net"],
+    ["sncf", "sncf-connect.com"],
+  ];
+  for (const [needle, host] of map) if (v.includes(needle)) return host;
+  if (icon === "food") return "resy.com";
+  if (icon === "fun") return "getyourguide.com";
+  if (icon === "train") return "rail.com";
+  return v ? v.replace(/[^a-z0-9]/g, "") + ".com" : "expedia.com";
+}
+
+export function extractBookingLinks(trip) {
+  const links = [];
+  const seen = new Set();
+  const priority = { flight: 0, hotel: 1, car: 2, train: 2, bus: 2, food: 3, fun: 4 };
+  for (const day of trip.days) {
+    for (const ev of day.events) {
+      if (!ev.vendor) continue;
+      const key = ev.vendor + "::" + ev.title;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      links.push({
+        icon: ev.icon,
+        emoji: ev.emoji,
+        title: ev.title,
+        vendor: ev.vendor,
+        cost: ev.cost,
+        host: vendorHost(ev.vendor, ev.icon),
+        rank: priority[ev.icon] ?? 5,
+      });
+    }
+  }
+  links.sort((a, b) => a.rank - b.rank);
+  return links;
+}
+
+export function TripPlanModal({ trip, open, onClose, onSave, onArchive, alreadySaved, alreadyArchived }) {
+  if (!open || !trip) return null;
+  const links = extractBookingLinks(trip);
+  return (
+    <div className="book-modal" onClick={onClose}>
+      <div className="book-card trip-popup" onClick={e => e.stopPropagation()}>
+        <button className="popup-close" onClick={onClose} aria-label="Close">✕</button>
+
+        <div className="popup-hero">
+          <span className="popup-hero-emoji">{trip.hero}</span>
+          <div>
+            <div className="popup-eyebrow">your plan is ready</div>
+            <h3 style={{ marginTop: 2 }}>
+              {trip.nights} nights in {trip.title}
+            </h3>
+            <div className="popup-meta">
+              {trip.dateFrom} → {trip.dateTo} · {trip.travelers} travelers · {trip.vibe}
+            </div>
+          </div>
+          <div className="popup-total">
+            <div className="lbl">Trip total</div>
+            <div className="num">{fmtMoney(trip.total)}</div>
+            <div className="per">{fmtMoney(trip.perPerson)} / person</div>
+          </div>
+        </div>
+
+        <div className="popup-section-head">
+          <h4>Suggested bookings</h4>
+          <span className="popup-sub">Tap a vendor to book it directly.</span>
+        </div>
+        <div className="popup-links">
+          {links.map((l, i) => (
+            <a
+              key={i}
+              href="#"
+              className="popup-link-row"
+              onClick={e => e.preventDefault()}
+            >
+              <span className={"popup-link-icon " + l.icon}>{l.emoji}</span>
+              <div className="popup-link-body">
+                <div className="popup-link-title">{l.title}</div>
+                <div className="popup-link-meta">{l.vendor}</div>
+              </div>
+              <div className="popup-link-cost">{l.cost === 0 ? "free" : fmtMoney(l.cost)}</div>
+              <div className="popup-link-cta">Book on {l.host} ↗</div>
+            </a>
+          ))}
+        </div>
+
+        <div className="popup-actions">
+          <button
+            className="btn btn-accent"
+            onClick={onSave}
+            disabled={alreadySaved}
+          >
+            {alreadySaved ? "✓ Saved" : "💾 Save to Saved Trips"}
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={onArchive}
+            disabled={alreadyArchived}
+          >
+            {alreadyArchived ? "✓ Archived" : "🗄️ Archive for later"}
+          </button>
+          <button className="btn btn-ghost" onClick={onClose}>
+            Refine the plan first →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function TripHeader({ trip }) {
   return (
     <div className="trip-header">
