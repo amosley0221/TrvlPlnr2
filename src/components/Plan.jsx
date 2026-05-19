@@ -3,6 +3,46 @@ import { fmtMoney, SWAP_OPTIONS } from "../data/trips.js";
 import { DUFFEL_OFFER, BOOKING_HOTEL } from "../data/api.js";
 import { jsonHighlight } from "./Pipeline.jsx";
 
+export function NoMatchModal({ open, prompt, destinations, onClose, onPick }) {
+  if (!open) return null;
+  const snippet = (prompt || "").trim();
+  const short = snippet.length > 140 ? snippet.slice(0, 140) + "…" : snippet;
+  return (
+    <div className="book-modal" onClick={onClose}>
+      <div className="book-card no-match-card" onClick={e => e.stopPropagation()}>
+        <button className="popup-close" onClick={onClose} aria-label="Close">✕</button>
+        <div style={{ fontSize: 44, lineHeight: 1, marginBottom: 8 }}>🤔</div>
+        <h3>I don't know that destination yet</h3>
+        <p className="lead">
+          I'm currently a small AI — I only plan trips to a curated set of places. Here's what I'm good at right now:
+        </p>
+        {short && (
+          <div className="no-match-prompt">
+            <span className="no-match-prompt-label">you asked for</span>
+            <span className="no-match-prompt-text">"{short}"</span>
+          </div>
+        )}
+        <div className="no-match-grid">
+          {destinations.map(d => (
+            <button key={d.id} className="no-match-tile" onClick={() => onPick(d.title)}>
+              <span className="emoji">{d.hero}</span>
+              <span>{d.title}</span>
+            </button>
+          ))}
+        </div>
+        <p className="no-match-note">
+          Pick one above, or rewrite your prompt with one of these in it.
+          Live flight + hotel APIs (Duffel, Booking.com, Google Places) aren't wired up yet —
+          when they are, I'll be able to plan anywhere.
+        </p>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+          <button className="btn btn-ghost" onClick={onClose}>Rewrite my prompt</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function vendorHost(vendor, icon) {
   const v = (vendor || "").toLowerCase();
   const map = [

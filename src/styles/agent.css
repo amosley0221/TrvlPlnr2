@@ -58,13 +58,15 @@
   gap: 12px; padding-top: 8px;
   border-top: 1.5px dashed var(--line);
 }
-.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip-wrap { display: inline-flex; align-items: center; position: relative; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 999px;
   border: 2px solid var(--ink); background: var(--paper);
   font-size: 12px; font-weight: 700; cursor: pointer;
   transition: transform 100ms ease, background 100ms ease;
+  color: var(--ink);
 }
 .chip:hover { transform: translateY(-1px); }
 .chip.on { background: var(--ink); color: var(--sunshine); }
@@ -73,7 +75,172 @@
 .chip.lime { background: var(--lime); }
 .chip.sun { background: var(--sunshine); }
 .chip.grape { background: var(--grape); color: white; }
-.chip .x { opacity: 0.7; font-weight: 900; margin-left: 2px; }
+.chip.unset {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--ink-2);
+  color: var(--ink-2);
+}
+.chip-plus {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--ink-2); color: var(--paper);
+  font-weight: 900; font-size: 11px;
+  display: inline-grid; place-items: center;
+  margin-left: 2px;
+}
+.chip.unset:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.chip.unset:hover .chip-plus { background: var(--ink); }
+.chip-x {
+  margin-left: 4px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  font-size: 11px; font-weight: 900;
+  cursor: pointer;
+  display: inline-grid; place-items: center;
+  transition: background 100ms ease;
+}
+.chip-x:hover { background: var(--coral); color: white; }
+
+/* ============ CHIP POPOVER PICKERS ============ */
+.chip-popover-backdrop {
+  position: fixed; inset: 0; z-index: 70;
+  background: transparent;
+}
+.chip-popover {
+  position: fixed; z-index: 71;
+  background: var(--paper);
+  border: 2.5px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: var(--shadow-hard);
+  padding: 16px;
+  min-width: 260px;
+  max-width: 360px;
+  animation: pop-up 180ms cubic-bezier(.4,1.6,.6,1);
+}
+@keyframes pop-up {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.picker-head {
+  font-family: "Fraunces", serif;
+  font-size: 16px; font-weight: 600;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.picker-actions {
+  display: flex; justify-content: space-between; gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1.5px dashed var(--line);
+}
+
+/* Travelers counter */
+.picker-counter {
+  display: flex; justify-content: center; align-items: center; gap: 18px;
+  padding: 6px 0;
+}
+.picker-step {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--paper); border: 2.5px solid var(--ink);
+  font-size: 18px; font-weight: 800; cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform 100ms ease;
+}
+.picker-step:hover { transform: translateY(-1px); background: var(--sunshine); }
+.picker-counter-num {
+  font-family: "Fraunces", serif;
+  font-size: 34px; font-weight: 700;
+  min-width: 60px; text-align: center;
+}
+.picker-counter-label {
+  text-align: center; font-size: 12px; color: var(--ink-2);
+  margin-top: -4px;
+}
+
+/* Budget */
+.picker-budget {
+  display: flex; align-items: center; gap: 6px;
+  border: 2px solid var(--ink); border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+.picker-budget-sign {
+  font-family: "Fraunces", serif;
+  font-size: 22px; font-weight: 700;
+}
+.picker-budget-input {
+  flex: 1; border: none; outline: none;
+  background: transparent;
+  font-family: "Fraunces", serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--ink);
+  width: 100%;
+}
+.picker-presets {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.picker-preset {
+  padding: 5px 11px; border-radius: 999px;
+  border: 1.5px solid var(--ink-2);
+  background: var(--paper);
+  font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.picker-preset:hover { border-color: var(--ink); background: var(--bg-2); }
+.picker-preset.active {
+  background: var(--lime); border-color: var(--ink);
+}
+
+/* Vibe grid */
+.picker-vibe-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  max-height: 280px; overflow-y: auto;
+}
+.picker-vibe-opt {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; border-radius: 12px;
+  border: 1.5px solid var(--ink-2);
+  background: var(--paper);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  text-align: left;
+  transition: transform 100ms ease;
+}
+.picker-vibe-opt:hover { transform: translateY(-1px); border-color: var(--ink); }
+.picker-vibe-opt.active {
+  background: var(--coral); color: white; border-color: var(--ink);
+}
+.picker-vibe-opt .emoji { font-size: 16px; }
+
+/* Dates */
+.picker-dates {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.picker-dates label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 11px; font-weight: 700; color: var(--ink-2);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.picker-dates input {
+  border: 2px solid var(--ink); border-radius: 10px;
+  padding: 8px 10px; font-family: inherit; font-size: 14px;
+  font-weight: 600; color: var(--ink);
+  background: var(--paper);
+  cursor: pointer;
+}
+.picker-quick {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+}
+.picker-quick button {
+  padding: 5px 11px; border-radius: 999px;
+  border: 1.5px solid var(--ink-2);
+  background: var(--paper);
+  font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.picker-quick button:hover { background: var(--sunshine); border-color: var(--ink); }
 
 .send-btn {
   width: 50px; height: 50px; border-radius: 50%;

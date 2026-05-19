@@ -22,7 +22,7 @@ function FloatyShapes() {
   );
 }
 
-export function Landing({ prompt, setPrompt, chips, setChips, onSend, onPickSuggestion }) {
+export function Landing({ prompt, setPrompt, constraints, setConstraints, onSend, onPickSuggestion }) {
   return (
     <>
       <section className="hero">
@@ -35,13 +35,20 @@ export function Landing({ prompt, setPrompt, chips, setChips, onSend, onPickSugg
         <p>Flights, stays, cars, trains, dinner res, sunset cocktails — one prompt, one plan, one tap to book.</p>
       </section>
 
-      <PromptBox value={prompt} setValue={setPrompt} chips={chips} setChips={setChips} onSend={onSend} thinking={false} />
+      <PromptBox
+        value={prompt}
+        setValue={setPrompt}
+        constraints={constraints}
+        setConstraints={setConstraints}
+        onSend={onSend}
+        thinking={false}
+      />
       <Suggestions onPick={onPickSuggestion} />
     </>
   );
 }
 
-export function Thinking({ prompt, chips, thinkStep, pipeIdx }) {
+export function Thinking({ prompt, constraints, thinkStep, pipeIdx }) {
   const [peek, setPeek] = useState(false);
   return (
     <section className="hero" style={{ paddingTop: 20 }}>
@@ -51,7 +58,14 @@ export function Thinking({ prompt, chips, thinkStep, pipeIdx }) {
       </h1>
       <p style={{ marginBottom: 20 }}>"{prompt.slice(0, 120)}{prompt.length > 120 ? "…" : ""}"</p>
 
-      <PromptBox value={prompt} setValue={() => {}} chips={chips} setChips={() => {}} onSend={() => {}} thinking={true} />
+      <PromptBox
+        value={prompt}
+        setValue={() => {}}
+        constraints={constraints || {}}
+        setConstraints={() => {}}
+        onSend={() => {}}
+        thinking={true}
+      />
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: 18 }}>
         <button className={"peek-toggle " + (peek ? "on" : "")} onClick={() => setPeek(p => !p)}>

@@ -454,19 +454,181 @@ export const TRIPS = {
       ]},
     ],
   },
+
+  florida: {
+    id: "trip-florida",
+    title: "Florida",
+    keywords: ["florida", "fl", "orlando", "tampa", "clearwater", "clermont", "kissimmee", "disney", "disneyworld", "disney world", "miami", "naples", "sarasota", "st pete", "saint pete", "key west", "florida keys", "everglades", "sanibel"],
+    vibeTags: ["family", "birthday", "beach", "kids"],
+    vibe: "Florida family trip",
+    travelers: 4,
+    origin: "Your home airport",
+    destination: "Orlando + Tampa Bay (MCO)",
+    dateFrom: "Jun 18", dateTo: "Jun 21", nights: 3,
+    total: 3160, perPerson: 790,
+    hero: "🌴", color: "sun",
+    bookingOptions: {
+      flights: [
+        { airline: "Southwest", flight: "WN 1432", route: "Your hub → MCO", meta: "Nonstop · 2 bags free · main", price: 198, host: "southwest.com", best: true },
+        { airline: "JetBlue", flight: "B6 581", route: "Your hub → MCO", meta: "Nonstop · most legroom · main", price: 212, host: "jetblue.com" },
+        { airline: "Delta", flight: "DL 1872", route: "Your hub → MCO", meta: "Nonstop · main cabin", price: 245, host: "delta.com" },
+        { airline: "American", flight: "AA 1654", route: "Your hub → MCO", meta: "Nonstop · main cabin", price: 234, host: "aa.com" },
+        { airline: "Frontier", flight: "F9 1410", route: "Your hub → MCO", meta: "Nonstop · ultra-low-cost", price: 102, host: "flyfrontier.com" },
+        { airline: "Spirit", flight: "NK 2304", route: "Your hub → MCO", meta: "Nonstop · bare fare · pack light", price: 89, host: "spirit.com", tag: "cheapest" },
+      ],
+      stays: [
+        { type: "Airbnb", emoji: "🏡", name: "Airbnb · Clermont vacation home", meta: "4BR · pool · near grandma · 4.91★", price: 720, host: "airbnb.com", best: true },
+        { type: "Hotel", emoji: "🏖️", name: "Sandpearl Resort · Clearwater Beach", meta: "Beachfront · 9.0/10 · 2 nights", price: 980, host: "marriott.com" },
+        { type: "Airbnb", emoji: "🏝️", name: "Airbnb · Clearwater Beach condo", meta: "3BR · walk to beach · 4.88★", price: 540, host: "airbnb.com", tag: "cheaper" },
+        { type: "Hotel", emoji: "🎢", name: "Hyatt Place Tampa/Wesley Chapel", meta: "8.7/10 · pool · breakfast incl.", price: 420, host: "hyatt.com" },
+        { type: "Hotel", emoji: "🌅", name: "Opal Sands Resort · Clearwater", meta: "Gulf-front suites · 9.2/10", price: 1240, host: "opalsands.com", tag: "lux" },
+      ],
+      transport: [
+        { name: "Enterprise · Minivan", meta: "Auto · 4 days · MCO pickup · sleeps 7", price: 320, host: "enterprise.com", best: true },
+        { name: "Hertz · 7-seat SUV", meta: "Auto · 4 days · airport pickup", price: 380, host: "hertz.com" },
+        { name: "Budget · Compact SUV", meta: "Auto · 4 days · cheaper trim", price: 240, host: "budget.com", tag: "cheaper" },
+        { name: "Mears airport shuttle", meta: "MCO ↔ Clermont · party of 5", price: 180, host: "mearstransportation.com" },
+      ],
+      extras: [
+        { name: "Birthday dinner at Bern's Steakhouse", meta: "Tampa landmark · res for 5", price: 480, host: "opentable.com" },
+        { name: "Clearwater Marine Aquarium", meta: "Family-friendly · dolphins", price: 110, host: "cmaquarium.org" },
+        { name: "Pier 60 sunset festival", meta: "Free · Clearwater Beach", price: 0, host: "myclearwater.com" },
+        { name: "Magic Kingdom day tickets", meta: "Optional · 1-day base · party of 5", price: 580, host: "disneyworld.disney.go.com" },
+      ],
+    },
+    breakdown: [
+      { key: "flights", label: "Flights", val: 990, color: "var(--sky)", emoji: "✈️" },
+      { key: "stay", label: "Stay", val: 1260, color: "var(--bubblegum)", emoji: "🏠" },
+      { key: "car", label: "Rental car", val: 320, color: "var(--tangerine)", emoji: "🚙" },
+      { key: "food", label: "Food", val: 480, color: "var(--lime)", emoji: "🍽️" },
+      { key: "fun", label: "Activities", val: 110, color: "var(--sunshine)", emoji: "🎟️" },
+    ],
+    days: [
+      { label: "Wed, Jun 18", title: "Fly in + Clermont", events: [
+        { time: "08:45", icon: "flight", emoji: "✈️", title: "Southwest 1432 · → MCO", meta: "Nonstop · 2 bags free", cost: 198, vendor: "Southwest" },
+        { time: "13:00", icon: "car", emoji: "🚙", title: "Enterprise · Minivan", meta: "MCO pickup · 4 days · sleeps 7", cost: 320, vendor: "Enterprise" },
+        { time: "15:00", icon: "hotel", emoji: "🏡", title: "Airbnb · Clermont vacation home", meta: "Check-in · 1 night · near grandma", cost: 240, vendor: "Airbnb" },
+        { time: "18:00", icon: "fun", emoji: "🎂", title: "Birthday dinner with grandma", meta: "Home-cooked · in Clermont", cost: 80 },
+      ]},
+      { label: "Thu, Jun 19", title: "Drive to Clearwater", events: [
+        { time: "10:00", icon: "car", emoji: "🚙", title: "Drive Clermont → Clearwater", meta: "~2h · I-4 west", cost: 0 },
+        { time: "13:00", icon: "hotel", emoji: "🏖️", title: "Sandpearl Resort · Clearwater", meta: "Check-in · 2 nights · beachfront", cost: 980, vendor: "Marriott" },
+        { time: "17:00", icon: "fun", emoji: "🐬", title: "Clearwater Marine Aquarium", meta: "Family-friendly · 2 hrs", cost: 110 },
+        { time: "20:00", icon: "food", emoji: "🥩", title: "Birthday dinner at Bern's", meta: "Tampa · party of 5 · res 8pm", cost: 480 },
+      ]},
+      { label: "Fri, Jun 20", title: "Beach day", events: [
+        { time: "10:00", icon: "fun", emoji: "🏖️", title: "Clearwater Beach", meta: "Sugar sand · cabana rental", cost: 60 },
+        { time: "19:00", icon: "fun", emoji: "🌅", title: "Pier 60 sunset festival", meta: "Free · street performers", cost: 0 },
+        { time: "20:30", icon: "food", emoji: "🦞", title: "Dinner at Frenchy's Rockaway", meta: "Grouper sandwiches · walk-in", cost: 180 },
+      ]},
+      { label: "Sat, Jun 21", title: "Fly home", events: [
+        { time: "08:00", icon: "car", emoji: "🚙", title: "Drive Clearwater → MCO", meta: "~1h 40m · return rental", cost: 0 },
+        { time: "12:25", icon: "flight", emoji: "✈️", title: "Southwest 1433 · MCO →", meta: "Nonstop · home", cost: 198, vendor: "Southwest" },
+      ]},
+    ],
+  },
 };
 
-export function matchTrip(prompt) {
+// Add vibeTags to every other trip so the constraint matcher can use them.
+TRIPS.tulum.vibeTags = ["romantic", "beach", "anniversary"];
+TRIPS.paris.vibeTags = ["romantic", "anniversary", "city", "honeymoon"];
+TRIPS.tokyo.vibeTags = ["foodie", "solo", "city", "adventure"];
+TRIPS.aspen.vibeTags = ["friends", "adventure", "mountain"];
+TRIPS.bali.vibeTags = ["honeymoon", "romantic", "beach", "wellness"];
+TRIPS.lisbon.vibeTags = ["friends", "city", "weekend"];
+
+export const VIBE_OPTIONS = [
+  { id: "romantic", label: "Romantic", emoji: "💞" },
+  { id: "anniversary", label: "Anniversary", emoji: "🥂" },
+  { id: "honeymoon", label: "Honeymoon", emoji: "🌺" },
+  { id: "family", label: "Family", emoji: "👨‍👩‍👧‍👦" },
+  { id: "birthday", label: "Birthday", emoji: "🎂" },
+  { id: "kids", label: "With kids", emoji: "🧒" },
+  { id: "friends", label: "Friends trip", emoji: "🎉" },
+  { id: "solo", label: "Solo", emoji: "🧘" },
+  { id: "foodie", label: "Foodie", emoji: "🍣" },
+  { id: "adventure", label: "Adventure", emoji: "🏔️" },
+  { id: "beach", label: "Beach", emoji: "🏖️" },
+  { id: "city", label: "City break", emoji: "🌆" },
+  { id: "weekend", label: "Long weekend", emoji: "📅" },
+  { id: "wellness", label: "Wellness", emoji: "💆" },
+];
+
+export const BUDGET_PRESETS = [1000, 2000, 3500, 5000, 10000];
+
+// matchTrip(prompt, constraints?) -> trip | null
+// Scores each template by:
+//   keyword hits in the prompt (weight 2)
+//   vibeTag matches against the constraints.vibe (weight 3)
+//   travelers count proximity to constraints.travelers (weight 1, only if set)
+//   total under constraints.budget (weight 1, only if set)
+// Returns null if no destination keyword from any template was seen in the
+// prompt AND no vibe constraint was set — that tells the caller "I don't
+// know where they want to go." No more random fallback.
+export function matchTrip(prompt, constraints = {}) {
   const p = (prompt || "").toLowerCase();
   const trips = Object.values(TRIPS);
-  let best = null, bestScore = 0;
+
+  let best = null;
+  let bestScore = 0;
+  let anyDestinationKeywordHit = false;
+
   for (const t of trips) {
     let score = 0;
-    for (const kw of t.keywords) if (p.includes(kw)) score += 1;
-    if (score > bestScore) { bestScore = score; best = t; }
+    for (const kw of t.keywords) {
+      if (kw && p.includes(kw)) {
+        score += 2;
+        anyDestinationKeywordHit = true;
+      }
+    }
+    if (constraints.vibe && t.vibeTags) {
+      if (t.vibeTags.includes(constraints.vibe)) score += 3;
+    }
+    if (constraints.travelers) {
+      const diff = Math.abs((t.travelers || 0) - constraints.travelers);
+      if (diff === 0) score += 1;
+      else if (diff <= 1) score += 0.5;
+    }
+    if (constraints.budget) {
+      if ((t.total || 0) <= constraints.budget) score += 1;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = t;
+    }
   }
-  if (best) return best;
-  return trips[Math.floor(Math.random() * trips.length)];
+
+  if (!anyDestinationKeywordHit && !constraints.vibe) return null;
+  return best;
+}
+
+// Overlay user-set constraints onto the matched trip's headline fields so
+// the popup shows what they asked for instead of the template defaults.
+export function applyConstraints(trip, constraints = {}) {
+  if (!trip) return trip;
+  let out = trip;
+  if (constraints.travelers && constraints.travelers !== trip.travelers) {
+    const t = constraints.travelers;
+    out = { ...out, travelers: t, perPerson: Math.round(out.total / t) };
+  }
+  if (constraints.dates && constraints.dates.from && constraints.dates.to) {
+    const fmt = (iso) => {
+      const d = new Date(iso + "T00:00");
+      return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+    };
+    const from = fmt(constraints.dates.from);
+    const to = fmt(constraints.dates.to);
+    const nights = Math.max(
+      1,
+      Math.round((new Date(constraints.dates.to) - new Date(constraints.dates.from)) / 86400000)
+    );
+    out = { ...out, dateFrom: from, dateTo: to, nights };
+  }
+  if (constraints.vibe) {
+    const vibeLabel = VIBE_OPTIONS.find(v => v.id === constraints.vibe)?.label;
+    if (vibeLabel) out = { ...out, vibe: vibeLabel };
+  }
+  return out;
 }
 
 export const MOCK_TRIP = TRIPS.tulum;

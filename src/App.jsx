@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { QUICK_CHIPS, SAVED_TRIPS, MOCK_TRIP, matchTrip } from "./data/trips.js";
+import { SAVED_TRIPS, MOCK_TRIP, TRIPS, matchTrip, applyConstraints } from "./data/trips.js";
 import { PIPELINE } from "./data/api.js";
 import { THINKING_STEPS } from "./data/trips.js";
 import { Landing, Thinking, PlanView } from "./components/Views.jsx";
 import { SavedTrips } from "./components/Saved.jsx";
 import { Bookings } from "./components/Bookings.jsx";
-import { SwapModal, BookModal, InspectModal, TripPlanModal } from "./components/Plan.jsx";
+import { SwapModal, BookModal, InspectModal, TripPlanModal, NoMatchModal } from "./components/Plan.jsx";
 import { FloatingAgent } from "./components/FloatingAgent.jsx";
 
 function recomputeBreakdown(days, original) {
@@ -55,15 +55,17 @@ function tripToBooking(trip) {
   };
 }
 
+const EMPTY_CONSTRAINTS = { travelers: null, budget: null, vibe: null, dates: null };
+
 export default function App() {
   const [view, setView] = useState("landing");
   const [prompt, setPrompt] = useState("");
-  const [chips, setChips] = useState(QUICK_CHIPS.map(c => ({ ...c, active: true })));
+  const [constraints, setConstraints] = useState(EMPTY_CONSTRAINTS);
   const [thinkStep, setThinkStep] = useState(0);
   const [pipeIdx, setPipeIdx] = useState(0);
   const [inspect, setInspect] = useState(null);
   const [agentMood, setAgentMood] = useState("idle");
-  const [locks, setLocks] = useState({ "Sun, Sep 14-0": true });
+  const [locks, setLocks] = useState({});
   const [refine, setRefine] = useState("");
   const [swap, setSwap] = useState(null);
   const [book, setBook] = useState(null);
@@ -72,15 +74,21 @@ export default function App() {
   const [saved, setSaved] = useState(SAVED_TRIPS.map(t => ({ ...t, archived: false })));
   const [bookings, setBookings] = useState([]);
   const [planPopupOpen, setPlanPopupOpen] = useState(false);
+  const [noMatchPrompt, setNoMatchPrompt] = useState(null);
   const [savedCurrentTrip, setSavedCurrentTrip] = useState(false);
   const [archivedCurrentTrip, setArchivedCurrentTrip] = useState(false);
 
   const startThinking = () => startThinkingWith(prompt);
 
   const startThinkingWith = (text) => {
-    const matched = matchTrip(text);
+    const matched = matchTrip(text, constraints);
+    if (!matched) {
+      setNoMatchPrompt(text);
+      return;
+    }
+    const overlaid = applyConstraints(matched, constraints);
     setPrompt(text);
-    setTrip(matched);
+    setTrip(overlaid);
     setLocks({});
     setView("thinking");
     setThinkStep(0);
@@ -193,6 +201,12 @@ export default function App() {
   const activeSavedCount = saved.filter(t => !t.archived).length;
   const navAgentHidden = view === "saved" || view === "bookings";
 
+  const supportedDestinations = Object.values(TRIPS).map(t => ({
+    title: t.title,
+    hero: t.hero,
+    id: t.id,
+  }));
+
   return (
     <div className="app">
       <header className="nav">
@@ -212,8 +226,22 @@ export default function App() {
       </header>
 
       <main className="main">
-        {view === "landing" && <Landing prompt={prompt} setPrompt={setPrompt} chips={chips} setChips={setChips} onSend={startThinking} onPickSuggestion={(label, send) => { setPrompt(label); if (send) setTimeout(() => startThinkingWith(label), 50); }} />}
-        {view === "thinking" && <Thinking prompt={prompt} chips={chips} thinkStep={thinkStep} pipeIdx={pipeIdx} />}
+        {view === "landing" && (
+          <Landing
+            prompt={prompt} setPrompt={setPrompt}
+            constraints={constraints} setConstraints={setConstraints}
+            onSend={startThinking}
+            onPickSuggestion={(label, send) => { setPrompt(label); if (send) setTimeout(() => startThinkingWith(label), 50); }}
+          />
+        )}
+        {view === "thinking" && (
+          <Thinking
+            prompt={prompt}
+            constraints={constraints}
+            thinkStep={thinkStep}
+            pipeIdx={pipeIdx}
+          />
+        )}
         {view === "plan" && (
           <PlanView
             trip={trip} locks={locks} toggleLock={toggleLock}
@@ -255,6 +283,18 @@ export default function App() {
         onArchive={() => handleSaveCurrent({ archived: true })}
         alreadySaved={savedCurrentTrip}
         alreadyArchived={archivedCurrentTrip}
+      />
+
+      <NoMatchModal
+        open={!!noMatchPrompt}
+        prompt={noMatchPrompt}
+        destinations={supportedDestinations}
+        onClose={() => setNoMatchPrompt(null)}
+        onPick={(label) => {
+          setNoMatchPrompt(null);
+          setPrompt(label);
+          setTimeout(() => startThinkingWith(label), 50);
+        }}
       />
 
       <SwapModal kind={swap?.kind} onClose={() => setSwap(null)} onChoose={applySwap} />
