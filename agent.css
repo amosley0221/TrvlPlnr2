@@ -1,0 +1,283 @@
+/* Agent + RGB prompt — Trvlplnnr */
+
+/* ============ PROMPT BOX (with RGB aurora) ============ */
+.prompt-wrap {
+  position: relative;
+  max-width: 760px;
+  margin: 38px auto 0;
+  padding: 5px;
+  border-radius: 28px;
+  isolation: isolate;
+}
+.prompt-wrap::before {
+  content: "";
+  position: absolute; inset: -4px;
+  border-radius: 32px;
+  background: conic-gradient(from var(--angle, 0deg),
+    var(--coral), var(--tangerine), var(--sunshine),
+    var(--lime), var(--mint), var(--sky), var(--grape),
+    var(--bubblegum), var(--coral));
+  filter: blur(14px);
+  opacity: 0;
+  transition: opacity 240ms ease;
+  z-index: -1;
+}
+.prompt-wrap.thinking::before {
+  opacity: 0.95;
+  animation: spin-aurora 3.5s linear infinite;
+}
+@property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes spin-aurora { to { --angle: 360deg; } }
+
+/* fallback for browsers without @property */
+.prompt-wrap.thinking::before { animation: spin-fallback 3.5s linear infinite, none; }
+@keyframes spin-fallback {
+  0% { transform: rotate(0); filter: blur(14px) hue-rotate(0deg); }
+  100% { transform: rotate(0); filter: blur(14px) hue-rotate(360deg); }
+}
+
+.prompt-box {
+  position: relative;
+  background: var(--paper);
+  border: 2.5px solid var(--ink);
+  border-radius: 26px;
+  padding: 18px 18px 14px;
+  box-shadow: var(--shadow-hard);
+}
+.prompt-input {
+  width: 100%; border: none; outline: none; resize: none;
+  background: transparent; color: var(--ink);
+  font-family: inherit; font-size: 17px; line-height: 1.45;
+  min-height: 92px;
+  padding: 4px 4px 12px;
+}
+.prompt-input::placeholder { color: var(--muted); }
+
+.prompt-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding-top: 8px;
+  border-top: 1.5px dashed var(--line);
+}
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 2px solid var(--ink); background: var(--paper);
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: transform 100ms ease, background 100ms ease;
+}
+.chip:hover { transform: translateY(-1px); }
+.chip.on { background: var(--ink); color: var(--sunshine); }
+.chip.coral { background: var(--coral); color: white; }
+.chip.sky { background: var(--sky); }
+.chip.lime { background: var(--lime); }
+.chip.sun { background: var(--sunshine); }
+.chip.grape { background: var(--grape); color: white; }
+.chip .x { opacity: 0.7; font-weight: 900; margin-left: 2px; }
+
+.send-btn {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--coral); color: white;
+  border: 2.5px solid var(--ink);
+  box-shadow: var(--shadow-hard-sm);
+  display: grid; place-items: center; cursor: pointer;
+  transition: transform 120ms cubic-bezier(.4,1.8,.5,1);
+}
+.send-btn:hover { transform: rotate(-12deg) scale(1.06); }
+.send-btn:disabled { background: var(--line); cursor: not-allowed; }
+
+/* Suggestion chips below prompt */
+.suggestions {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin-top: 18px;
+}
+.suggestion {
+  padding: 10px 16px; border-radius: 999px;
+  background: var(--paper); border: 2px solid var(--ink);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: transform 120ms cubic-bezier(.4,1.6,.6,1);
+}
+.suggestion:hover { transform: translate(-1px, -1px); }
+.suggestion .emoji { font-size: 16px; }
+
+/* ============ AGENT CHARACTER (CSS-built) ============ */
+.agent-stage {
+  position: relative;
+  width: 220px; height: 220px;
+  margin: 0 auto;
+}
+.agent {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+}
+.agent-body {
+  position: relative;
+  width: 170px; height: 170px;
+}
+
+/* Floating animation */
+@keyframes float-y { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+.agent-body { animation: float-y 3.6s ease-in-out infinite; transform-origin: center; }
+.agent.thinking .agent-body { animation: float-y 1.2s ease-in-out infinite, wobble 0.6s ease-in-out infinite; }
+@keyframes wobble { 0%,100% { rotate: -3deg; } 50% { rotate: 3deg; } }
+
+/* Head (orb) */
+.head {
+  position: absolute; left: 50%; top: 12px;
+  transform: translateX(-50%);
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffd0b0, var(--coral) 70%, #c92850);
+  border: 3px solid var(--ink);
+  box-shadow: inset -8px -10px 0 rgba(0,0,0,0.12), 4px 4px 0 var(--ink);
+  overflow: hidden;
+}
+
+/* Cheeks */
+.cheek {
+  position: absolute; width: 18px; height: 12px; border-radius: 50%;
+  background: rgba(255, 80, 100, 0.6); top: 70px;
+}
+.cheek.l { left: 18px; }
+.cheek.r { right: 18px; }
+
+/* Eyes */
+.eye {
+  position: absolute; top: 46px;
+  width: 22px; height: 26px;
+  background: var(--ink); border-radius: 50%;
+  transition: transform 200ms ease, height 120ms ease, top 120ms ease;
+}
+.eye.l { left: 28px; }
+.eye.r { right: 28px; }
+.eye::after {
+  content: ""; position: absolute; top: 4px; right: 4px;
+  width: 7px; height: 7px; border-radius: 50%; background: white;
+}
+.agent.thinking .eye { animation: dart 1.6s ease-in-out infinite; }
+.agent.thinking .eye.r { animation-delay: 0.1s; }
+@keyframes dart {
+  0%,100% { transform: translate(0,0); }
+  25% { transform: translate(4px, -2px); }
+  50% { transform: translate(-3px, 3px); }
+  75% { transform: translate(2px, 2px); }
+}
+.agent.happy .eye { height: 6px; top: 56px; border-radius: 12px 12px 4px 4px; }
+.agent.happy .eye::after { display: none; }
+.agent.surprised .eye { transform: scale(1.2); }
+
+/* Mouth */
+.mouth {
+  position: absolute; left: 50%; top: 86px;
+  transform: translateX(-50%);
+  width: 36px; height: 18px;
+  background: var(--ink); border-radius: 0 0 22px 22px;
+  overflow: hidden;
+}
+.mouth::before {
+  content: ""; position: absolute; left: 50%; top: 4px;
+  transform: translateX(-50%);
+  width: 16px; height: 14px; border-radius: 0 0 14px 14px;
+  background: var(--coral);
+}
+.agent.thinking .mouth {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--ink); top: 92px;
+}
+.agent.thinking .mouth::before { display: none; }
+.agent.happy .mouth { width: 50px; height: 28px; border-radius: 0 0 30px 30px; top: 82px; }
+.agent.surprised .mouth { width: 22px; height: 22px; border-radius: 50%; }
+
+/* Antenna (the searching beacon) */
+.antenna {
+  position: absolute; left: 50%; top: -22px;
+  transform: translateX(-50%);
+  width: 4px; height: 26px; background: var(--ink); border-radius: 4px;
+}
+.antenna::after {
+  content: ""; position: absolute; left: 50%; top: -10px;
+  transform: translateX(-50%);
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--lime);
+  border: 3px solid var(--ink);
+}
+.agent.thinking .antenna::after {
+  animation: blink 0.6s ease-in-out infinite, hue 2s linear infinite;
+}
+@keyframes blink { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.4); } }
+@keyframes hue {
+  0% { background: var(--coral); }
+  20% { background: var(--tangerine); }
+  40% { background: var(--sunshine); }
+  60% { background: var(--mint); }
+  80% { background: var(--sky); }
+  100% { background: var(--grape); }
+}
+
+/* Tiny orbiting icons when thinking */
+.orbit {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+.orbit-item {
+  position: absolute; left: 50%; top: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--paper); border: 2.5px solid var(--ink);
+  display: grid; place-items: center; font-size: 18px;
+  box-shadow: var(--shadow-hard-sm);
+  transform-origin: center;
+  opacity: 0;
+}
+.agent.thinking .orbit-item { opacity: 1; animation: orbit-spin 3.6s linear infinite; }
+.agent.thinking .orbit-item.i1 { animation-delay: 0s; }
+.agent.thinking .orbit-item.i2 { animation-delay: -0.9s; }
+.agent.thinking .orbit-item.i3 { animation-delay: -1.8s; }
+.agent.thinking .orbit-item.i4 { animation-delay: -2.7s; }
+@keyframes orbit-spin {
+  from { transform: translate(-50%,-50%) rotate(0) translateX(110px) rotate(0); }
+  to   { transform: translate(-50%,-50%) rotate(360deg) translateX(110px) rotate(-360deg); }
+}
+
+/* Thinking bubble */
+.bubble {
+  position: absolute; right: -20px; top: 0;
+  background: var(--paper); border: 2.5px solid var(--ink);
+  border-radius: 18px; padding: 8px 14px;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  box-shadow: var(--shadow-hard-sm);
+  white-space: nowrap;
+}
+.bubble::before {
+  content: ""; position: absolute; left: -10px; bottom: 8px;
+  width: 14px; height: 14px; background: var(--paper);
+  border-left: 2.5px solid var(--ink); border-bottom: 2.5px solid var(--ink);
+  transform: rotate(45deg);
+}
+
+/* ============ THINKING STATUS LOG ============ */
+.think-log {
+  margin-top: 28px; max-width: 560px; margin-left: auto; margin-right: auto;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.think-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 14px;
+  background: var(--paper); border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard-sm);
+  font-size: 14px; font-weight: 500;
+  opacity: 0; transform: translateY(8px);
+  animation: pop-in 320ms cubic-bezier(.4,1.6,.6,1) forwards;
+}
+@keyframes pop-in { to { opacity: 1; transform: translateY(0); } }
+.think-row.active { background: var(--sunshine); }
+.think-row.done { opacity: 0.7; }
+.think-row .check { color: var(--mint); font-weight: 900; }
+.think-row .spin {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2.5px solid var(--ink); border-right-color: transparent;
+  animation: rotate 0.8s linear infinite;
+}
+@keyframes rotate { to { transform: rotate(360deg); } }
+.think-row .emoji { font-size: 18px; }
