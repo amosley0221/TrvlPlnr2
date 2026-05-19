@@ -24,7 +24,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.post("/api/plan-trip", async (req, res) => {
-  const { prompt, constraints } = req.body ?? {};
+  const { prompt, constraints, today } = req.body ?? {};
 
   if (typeof prompt !== "string" || !prompt.trim()) {
     return res.status(400).json({ error: { message: "prompt is required" } });
@@ -33,7 +33,7 @@ app.post("/api/plan-trip", async (req, res) => {
     return res.status(400).json({ error: { message: "prompt is too long (max 2000 chars)" } });
   }
 
-  const userMessage = buildUserMessage(prompt, constraints);
+  const userMessage = buildUserMessage(prompt, constraints, today);
 
   try {
     const response = await client.messages.create({
@@ -140,8 +140,25 @@ function extractJsonObject(text) {
   return cleaned.slice(first, last + 1);
 }
 
-function buildUserMessage(prompt, constraints) {
-  const lines = [`User trip request:\n"""\n${prompt.trim()}\n"""`];
+function buildUserMessage(prompt, constraints, today) {
+  const lines = [];
+
+  // Prepend the date so Claude can resolve relative phrases like
+  // "this weekend" or "next month" against the actual current date.
+  // Fall back to the server's clock if the client didn't send one.
+  const dateLabel =
+    typeof today === "string" && today.trim()
+      ? today.trim()
+      : new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+  lines.push(`Today is ${dateLabel}.`);
+  lines.push("");
+  lines.push(`User trip request:\n"""\n${prompt.trim()}\n"""`);
+
   const c = constraints && typeof constraints === "object" ? constraints : null;
   if (c) {
     const set = [];

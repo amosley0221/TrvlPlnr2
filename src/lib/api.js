@@ -16,13 +16,24 @@ export class AINotEnabledError extends Error {
 export async function planTripWithAI(prompt, constraints, { signal } = {}) {
   if (!AI_ENABLED) throw new AINotEnabledError();
 
+  // Send today's date with every request so Claude can resolve relative
+  // phrases like "this weekend" or "next month". We use the browser's
+  // local date (not the server's UTC) so timezones don't shift the answer.
+  const now = new Date();
+  const today = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   const url = `${API_BASE}/api/plan-trip`;
   let response;
   try {
     response = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ prompt, constraints }),
+      body: JSON.stringify({ prompt, constraints, today }),
       signal,
     });
   } catch (err) {
