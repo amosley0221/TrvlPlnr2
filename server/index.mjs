@@ -3,7 +3,6 @@ import cors from "cors";
 import express from "express";
 
 import { SYSTEM_PROMPT } from "./system-prompt.mjs";
-import { TRIP_SCHEMA } from "./schema.mjs";
 
 const PORT = Number(process.env.PORT) || 8787;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -41,9 +40,13 @@ app.post("/api/plan-trip", async (req, res) => {
       model: "claude-sonnet-4-6",
       max_tokens: 8000,
       thinking: { type: "adaptive" },
+      // NOTE: structured outputs (output_config.format with a JSON schema)
+      // would be ideal here, but the trip schema is too deeply nested for
+      // Anthropic's grammar compiler — it returns
+      // "The compiled grammar is too large". We instead instruct Claude
+      // in the system prompt to return JSON-only and parse defensively.
       output_config: {
         effort: "medium",
-        format: { type: "json_schema", schema: TRIP_SCHEMA },
       },
       system: [
         {
@@ -55,8 +58,6 @@ app.post("/api/plan-trip", async (req, res) => {
       messages: [{ role: "user", content: userMessage }],
     });
 
-    // Log cache + token usage for observability. Cache hit rate should
-    // approach 100% on cache_read_input_tokens after the first request.
     console.log(
       "[plan-trip] tokens",
       JSON.stringify({
@@ -81,11 +82,19 @@ app.post("/api/plan-trip", async (req, res) => {
         .json({ error: { message: "Empty response from model." } });
     }
 
+    const jsonText = extractJsonObject(textBlock.text);
+    if (!jsonText) {
+      console.error("[plan-trip] no JSON object found in response:", textBlock.text.slice(0, 300));
+      return res
+        .status(502)
+        .json({ error: { message: "Model did not return JSON." } });
+    }
+
     let trip;
     try {
-      trip = JSON.parse(textBlock.text);
+      trip = JSON.parse(jsonText);
     } catch (parseErr) {
-      console.error("[plan-trip] JSON parse failed:", parseErr.message);
+      console.error("[plan-trip] JSON parse failed:", parseErr.message, "near:", jsonText.slice(0, 300));
       return res
         .status(502)
         .json({ error: { message: "Model returned invalid JSON." } });
@@ -96,6 +105,26 @@ app.post("/api/plan-trip", async (req, res) => {
     return handleAnthropicError(err, res);
   }
 });
+
+// Sonnet 4.6 reliably outputs raw JSON when instructed, but occasionally
+// wraps the body in a ```json fence or a brief preamble. Strip both, then
+// trim to the outermost { ... } so JSON.parse has the best chance.
+function extractJsonObject(text) {
+  if (!text || typeof text !== "string") return null;
+  let cleaned = text.trim();
+
+  // Drop a fenced code block if present.
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json|JSON)?\s*\n?/, "");
+    cleaned = cleaned.replace(/\n?```\s*$/, "");
+    cleaned = cleaned.trim();
+  }
+
+  const first = cleaned.indexOf("{");
+  const last = cleaned.lastIndexOf("}");
+  if (first === -1 || last === -1 || last < first) return null;
+  return cleaned.slice(first, last + 1);
+}
 
 function buildUserMessage(prompt, constraints) {
   const lines = [`User trip request:\n"""\n${prompt.trim()}\n"""`];
@@ -121,7 +150,9 @@ function buildUserMessage(prompt, constraints) {
       lines.push("\n(No user-set constraints — infer reasonable defaults from the prompt.)");
     }
   }
-  lines.push("\nReturn the full trip JSON.");
+  lines.push(
+    "\nReturn the full trip as a single JSON object. No markdown fences, no prose, nothing outside the JSON.",
+  );
   return lines.join("\n");
 }
 
