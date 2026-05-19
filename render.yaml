@@ -17,6 +17,12 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      # Optional. When set, the server replaces Claude's estimated flight
+      # prices with real offers from Duffel. Sandbox keys (duffel_test_*)
+      # are free and return realistic test data; live keys (duffel_live_*)
+      # return real airline inventory. Leave unset to skip the integration.
+      - key: DUFFEL_API_KEY
+        sync: false
 
   # Frontend: Vite-built React static site.
   # Set VITE_API_URL to the trvlplnnr-api URL (e.g.
