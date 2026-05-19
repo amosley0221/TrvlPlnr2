@@ -5,6 +5,7 @@ import { THINKING_STEPS } from "./data/trips.js";
 import { Landing, Thinking, PlanView } from "./components/Views.jsx";
 import { SavedTrips } from "./components/Saved.jsx";
 import { SwapModal, BookModal, InspectModal } from "./components/Plan.jsx";
+import { FloatingAgent } from "./components/FloatingAgent.jsx";
 
 function recomputeBreakdown(days, original) {
   const buckets = { flights: 0, stay: 0, car: 0, food: 0, fun: 0 };
@@ -128,7 +129,7 @@ export default function App() {
           <span>trvlplnnr</span>
         </div>
         <nav className="nav-links">
-          <button className={"nav-link " + (view === "landing" || view === "thinking" || view === "plan" ? "active" : "")} onClick={() => setView("landing")}>Plan a trip</button>
+          <button className={"nav-link " + (view === "landing" || view === "thinking" || view === "plan" ? "active" : "")} onClick={() => { setView("landing"); setAgentMood("idle"); }}>Plan a trip</button>
           <button className={"nav-link " + (view === "saved" ? "active" : "")} onClick={() => setView("saved")}>Saved trips ({SAVED_TRIPS.length})</button>
           <button className="nav-link">Bookings</button>
         </nav>
@@ -139,7 +140,7 @@ export default function App() {
       </header>
 
       <main className="main">
-        {view === "landing" && <Landing prompt={prompt} setPrompt={setPrompt} chips={chips} setChips={setChips} onSend={startThinking} agentMood={agentMood} onPickSuggestion={(label, send) => { setPrompt(label); if (send) setTimeout(() => startThinkingWith(label), 50); }} />}
+        {view === "landing" && <Landing prompt={prompt} setPrompt={setPrompt} chips={chips} setChips={setChips} onSend={startThinking} onPickSuggestion={(label, send) => { setPrompt(label); if (send) setTimeout(() => startThinkingWith(label), 50); }} />}
         {view === "thinking" && <Thinking prompt={prompt} chips={chips} thinkStep={thinkStep} pipeIdx={pipeIdx} />}
         {view === "plan" && (
           <PlanView
@@ -157,6 +158,8 @@ export default function App() {
         <span>© trvlplnnr — your AI travel concierge</span>
         <span>prices update every 6 hours · usd</span>
       </footer>
+
+      <FloatingAgent mood={agentMood} />
 
       <SwapModal kind={swap?.kind} onClose={() => setSwap(null)} onChoose={applySwap} />
       <InspectModal kind={inspect} onClose={() => setInspect(null)} />

@@ -183,3 +183,50 @@ h1, h2, h3, h4 {
 .marquee-track span { display: inline-flex; align-items: center; gap: 36px; }
 .marquee-track .sep { color: var(--coral); }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ============ CUSTOM CURSOR ============ */
+/* Coral dot for default; gold star for interactive elements. */
+html {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="%23ff4d6d" stroke="%231a1330" stroke-width="2.2"/><circle cx="11" cy="11" r="2" fill="%23fffaf2"/></svg>') 11 11, auto;
+}
+a, button, input[type="button"], input[type="submit"], summary, label,
+[role="button"], [contenteditable="true"],
+.suggestion, .chip, .nav-link, .refine-chip, .send-btn,
+.saved-card, .book-option, .option-row, .inspect-btn, .peek-toggle,
+.brand, .floaty {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><path d="M15 3 L18.2 11.5 L27 11.8 L20 17.3 L22.7 26 L15 21.1 L7.3 26 L10 17.3 L3 11.8 L11.8 11.5 Z" fill="%23ffd23f" stroke="%231a1330" stroke-width="2" stroke-linejoin="round"/></svg>') 15 15, pointer;
+}
+input[type="text"], input:not([type]), textarea {
+  cursor: text;
+}
+
+/* Disable custom cursor on touch / coarse pointers — pointer:none means no cursor */
+@media (hover: none), (pointer: coarse) {
+  html, html a, html button, html .suggestion, html .chip,
+  html .nav-link, html .refine-chip, html .send-btn,
+  html .saved-card, html .book-option, html .option-row,
+  html .inspect-btn, html .peek-toggle, html .brand, html .floaty {
+    cursor: auto;
+  }
+}
+
+/* ============ CUSTOM SCROLLBAR ============ */
+/* Firefox */
+html { scrollbar-color: var(--coral) var(--paper); scrollbar-width: auto; }
+
+/* WebKit / Chromium */
+::-webkit-scrollbar { width: 16px; height: 16px; }
+::-webkit-scrollbar-track {
+  background: var(--paper);
+  border-left: 3px solid var(--ink);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--coral);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background-clip: padding-box;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--tangerine); }
+::-webkit-scrollbar-thumb:active { background: var(--grape); }
+::-webkit-scrollbar-corner { background: var(--paper); }

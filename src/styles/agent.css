@@ -281,3 +281,82 @@
 }
 @keyframes rotate { to { transform: rotate(360deg); } }
 .think-row .emoji { font-size: 18px; }
+
+/* ============ CONFUSED MOOD ============ */
+.agent.confused .agent-body {
+  animation: float-y 3.6s ease-in-out infinite, confused-tilt 0.7s ease-in-out infinite;
+}
+@keyframes confused-tilt {
+  0%, 100% { rotate: -6deg; }
+  50%      { rotate: 6deg; }
+}
+
+/* Eyes go off-center, asymmetric — looking around for the cursor */
+.agent.confused .eye {
+  animation: dart-confused 1.1s ease-in-out infinite;
+}
+.agent.confused .eye.l { animation-delay: 0s; }
+.agent.confused .eye.r { animation-delay: 0.25s; }
+@keyframes dart-confused {
+  0%, 100% { transform: translate(0, 0) scale(1, 1); }
+  20%      { transform: translate(-4px, 2px) scale(0.85, 1.2); }
+  50%      { transform: translate(3px, -3px) scale(1.15, 0.85); }
+  80%      { transform: translate(-2px, 3px) scale(1, 1); }
+}
+
+/* Small "O" mouth — agape */
+.agent.confused .mouth {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--ink); top: 92px;
+}
+.agent.confused .mouth::before { display: none; }
+
+/* Floating "?" above the head */
+.agent.confused .agent-body::before {
+  content: "?";
+  position: absolute;
+  left: 50%; top: -42px;
+  transform: translateX(-50%);
+  font-family: "Fraunces", "Times New Roman", serif;
+  font-size: 42px; font-weight: 700; line-height: 1;
+  color: var(--grape);
+  -webkit-text-stroke: 2.5px var(--ink);
+  text-shadow: 3px 3px 0 var(--ink);
+  animation: q-bounce 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes q-bounce {
+  0%, 100% { transform: translate(-50%, 0) rotate(-10deg); opacity: 0.95; }
+  50%      { transform: translate(-50%, -6px) rotate(10deg); opacity: 1; }
+}
+
+/* ============ FLOATING AGENT (cursor-chasing) ============ */
+.floating-agent {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  z-index: 60;
+  pointer-events: none;
+  will-change: transform;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+.floating-agent[data-ready="true"] { opacity: 1; }
+
+/* The inner element is the actual shrunk-down stage, offset so the agent
+   trails to the lower-right of the cursor rather than covering it. */
+.floating-agent-inner {
+  position: absolute;
+  top: 0; left: 0;
+  transform: translate(24px, 28px) scale(0.42);
+  transform-origin: top left;
+}
+.floating-agent-inner .agent-stage { margin: 0; }
+
+/* Hide the chase entirely on touch / reduced-motion. */
+@media (hover: none), (pointer: coarse) {
+  .floating-agent { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-agent { display: none !important; }
+}

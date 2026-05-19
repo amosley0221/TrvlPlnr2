@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Agent, PromptBox, Suggestions, ThinkingLog } from "./Agent.jsx";
+import { PromptBox, Suggestions, ThinkingLog } from "./Agent.jsx";
 import { Pipeline } from "./Pipeline.jsx";
 import { TripHeader, CostBreakdown, DayCard, RefineBar } from "./Plan.jsx";
 
@@ -22,7 +22,7 @@ function FloatyShapes() {
   );
 }
 
-export function Landing({ prompt, setPrompt, chips, setChips, onSend, agentMood, onPickSuggestion }) {
+export function Landing({ prompt, setPrompt, chips, setChips, onSend, onPickSuggestion }) {
   return (
     <>
       <section className="hero">
@@ -34,10 +34,6 @@ export function Landing({ prompt, setPrompt, chips, setChips, onSend, agentMood,
         </h1>
         <p>Flights, stays, cars, trains, dinner res, sunset cocktails — one prompt, one plan, one tap to book.</p>
       </section>
-
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 36 }}>
-        <Agent mood={agentMood} />
-      </div>
 
       <PromptBox value={prompt} setValue={setPrompt} chips={chips} setChips={setChips} onSend={onSend} thinking={false} />
       <Suggestions onPick={onPickSuggestion} />
@@ -64,10 +60,6 @@ export function Thinking({ prompt, chips, thinkStep, pipeIdx }) {
         Hang tight — I'm <span className="pop">cooking</span>.
       </h1>
       <p style={{ marginBottom: 20 }}>"{prompt.slice(0, 120)}{prompt.length > 120 ? "…" : ""}"</p>
-
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <Agent mood="thinking" />
-      </div>
 
       <PromptBox value={prompt} setValue={() => {}} chips={chips} setChips={() => {}} onSend={() => {}} thinking={true} />
 
@@ -123,8 +115,7 @@ export function PlanView({ trip, locks, toggleLock, onSwap, refine, setRefine, o
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, margin: "40px 0 16px" }}>
-        <Agent mood="happy" />
-        <div style={{ background: "var(--paper)", border: "2.5px solid var(--ink)", borderRadius: 18, padding: "14px 18px", boxShadow: "var(--shadow-hard-sm)", maxWidth: 360 }}>
+        <div style={{ background: "var(--paper)", border: "2.5px solid var(--ink)", borderRadius: 18, padding: "14px 18px", boxShadow: "var(--shadow-hard-sm)", maxWidth: 420 }}>
           <div style={{ fontWeight: 800, marginBottom: 4 }}>Looking good?</div>
           <div style={{ fontSize: 13, color: "var(--ink-2)" }}>Tell me what to change below — "cheaper hotel", "shorter flights", anything. I'll keep your locks.</div>
         </div>
