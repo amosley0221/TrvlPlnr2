@@ -38,7 +38,11 @@ app.post("/api/plan-trip", async (req, res) => {
   try {
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 8000,
+      // Adaptive thinking shares this budget with the final JSON output.
+      // Trip JSON is ~3-4K tokens; allow plenty of headroom for thinking
+      // so we never truncate the response (which produces an unparseable
+      // half-finished JSON object).
+      max_tokens: 16000,
       thinking: { type: "adaptive" },
       // NOTE: structured outputs (output_config.format with a JSON schema)
       // would be ideal here, but the trip schema is too deeply nested for
@@ -46,7 +50,7 @@ app.post("/api/plan-trip", async (req, res) => {
       // "The compiled grammar is too large". We instead instruct Claude
       // in the system prompt to return JSON-only and parse defensively.
       output_config: {
-        effort: "medium",
+        effort: "low",
       },
       system: [
         {
@@ -73,6 +77,16 @@ app.post("/api/plan-trip", async (req, res) => {
       return res
         .status(422)
         .json({ error: { message: "I can't plan that trip.", category: "refusal" } });
+    }
+
+    if (response.stop_reason === "max_tokens") {
+      console.error(
+        "[plan-trip] hit max_tokens before finishing — output truncated. ",
+        "Consider raising max_tokens or lowering effort.",
+      );
+      return res.status(502).json({
+        error: { message: "The plan ran out of room before finishing. Please try again." },
+      });
     }
 
     const textBlock = response.content.find((b) => b.type === "text");
