@@ -34,9 +34,15 @@ export function FloatingAgent({ mood, hidden }) {
   const [overInteractive, setOverInteractive] = useState(false);
   const [ready, setReady] = useState(false);
 
-  if (hidden) return null;
+  // NOTE: every hook (useRef / useState / useEffect) must be called on every
+  // render — never early-return *before* the hooks below or React will throw
+  // "Rendered fewer hooks than expected" (Minified React error #300).
+  // Hide the agent by guarding inside the effects + skipping the JSX at the
+  // bottom, not by returning early.
 
   useEffect(() => {
+    if (hidden) return undefined;
+
     const seed = () => {
       target.current = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.35 };
       pos.current = { ...target.current };
@@ -64,9 +70,11 @@ export function FloatingAgent({ mood, hidden }) {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
-  }, [ready]);
+  }, [ready, hidden]);
 
   useEffect(() => {
+    if (hidden) return undefined;
+
     // Freeze the chase when the agent is thinking (it stays where it was at submit
     // time and plays the thinking animation in place) or when the cursor sits over
     // an interactive element (it stops to look confused).
@@ -84,7 +92,9 @@ export function FloatingAgent({ mood, hidden }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [mood, overInteractive]);
+  }, [mood, overInteractive, hidden]);
+
+  if (hidden) return null;
 
   // Thinking takes priority over confused so a submitted prompt always
   // animates correctly even if the cursor rests on a button.
