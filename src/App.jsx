@@ -198,7 +198,7 @@ export default function App() {
       <header className="nav">
         <div className="brand">
           <div className="brand-mark"></div>
-          <span>trvlplnnr</span>
+          <span>TrvlPlnr</span>
         </div>
         <nav className="nav-links">
           <button className={"nav-link " + (view === "landing" || view === "thinking" || view === "plan" ? "active" : "")} onClick={() => { setView("landing"); setAgentMood("idle"); }}>Plan a trip</button>
@@ -241,7 +241,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>© trvlplnnr — your AI travel concierge</span>
+        <span>© TrvlPlnr — your AI travel concierge</span>
         <span>prices update every 6 hours · usd</span>
       </footer>
 

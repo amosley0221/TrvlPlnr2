@@ -56,9 +56,56 @@ export function extractBookingLinks(trip) {
   return links;
 }
 
+function OptionRow({ opt, category, defaultEmoji }) {
+  const title = opt.name || (opt.airline ? opt.airline + " · " + opt.flight : opt.flight);
+  const sub = opt.airline && opt.route ? opt.route : opt.type || opt.airline || "";
+  return (
+    <a
+      href="#"
+      className={"popup-link-row" + (opt.best ? " best" : "")}
+      onClick={e => e.preventDefault()}
+    >
+      <span className={"popup-link-icon " + category}>{opt.emoji || defaultEmoji}</span>
+      <div className="popup-link-body">
+        <div className="popup-link-title">
+          {title}
+          {opt.best && <span className="best-badge">★ best fit</span>}
+          {opt.tag && !opt.best && <span className={"opt-tag " + opt.tag}>{opt.tag}</span>}
+        </div>
+        <div className="popup-link-meta">
+          {sub ? sub + " · " : ""}{opt.meta}
+        </div>
+      </div>
+      <div className="popup-link-cost">{opt.price === 0 ? "free" : fmtMoney(opt.price)}</div>
+      <div className="popup-link-cta">Book on {opt.host} ↗</div>
+    </a>
+  );
+}
+
+function PopupSection({ icon, title, sub, items, category, defaultEmoji }) {
+  if (!items || !items.length) return null;
+  return (
+    <section className="popup-section">
+      <div className="popup-section-head">
+        <h4><span className="popup-section-icon">{icon}</span> {title}</h4>
+        <span className="popup-sub">{sub}</span>
+      </div>
+      <div className="popup-links">
+        {items.map((opt, i) => (
+          <OptionRow key={i} opt={opt} category={category} defaultEmoji={defaultEmoji} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function TripPlanModal({ trip, open, onClose, onSave, onArchive, alreadySaved, alreadyArchived }) {
   if (!open || !trip) return null;
-  const links = extractBookingLinks(trip);
+  const opts = trip.bookingOptions;
+
+  // Fallback for trips that don't yet have curated bookingOptions
+  const legacyLinks = !opts ? extractBookingLinks(trip) : [];
+
   return (
     <div className="book-modal" onClick={onClose}>
       <div className="book-card trip-popup" onClick={e => e.stopPropagation()}>
@@ -82,28 +129,62 @@ export function TripPlanModal({ trip, open, onClose, onSave, onArchive, alreadyS
           </div>
         </div>
 
-        <div className="popup-section-head">
-          <h4>Suggested bookings</h4>
-          <span className="popup-sub">Tap a vendor to book it directly.</span>
-        </div>
-        <div className="popup-links">
-          {links.map((l, i) => (
-            <a
-              key={i}
-              href="#"
-              className="popup-link-row"
-              onClick={e => e.preventDefault()}
-            >
-              <span className={"popup-link-icon " + l.icon}>{l.emoji}</span>
-              <div className="popup-link-body">
-                <div className="popup-link-title">{l.title}</div>
-                <div className="popup-link-meta">{l.vendor}</div>
-              </div>
-              <div className="popup-link-cost">{l.cost === 0 ? "free" : fmtMoney(l.cost)}</div>
-              <div className="popup-link-cta">Book on {l.host} ↗</div>
-            </a>
-          ))}
-        </div>
+        {opts ? (
+          <>
+            <PopupSection
+              icon="✈️"
+              title="Flights"
+              sub={`${opts.flights.length} carriers · ranked by best fit`}
+              items={opts.flights}
+              category="flight"
+              defaultEmoji="✈️"
+            />
+            <PopupSection
+              icon="🏨"
+              title="Where you'll stay"
+              sub="Hotels + Airbnbs · taxes incl."
+              items={opts.stays}
+              category="hotel"
+              defaultEmoji="🏨"
+            />
+            <PopupSection
+              icon="🚗"
+              title="Getting around"
+              sub="Transport for the whole stay"
+              items={opts.transport}
+              category="car"
+              defaultEmoji="🚗"
+            />
+            <PopupSection
+              icon="🎟️"
+              title="On the ground"
+              sub="Dinner reservations + activities"
+              items={opts.extras}
+              category="fun"
+              defaultEmoji="🎟️"
+            />
+          </>
+        ) : (
+          <>
+            <div className="popup-section-head">
+              <h4>Suggested bookings</h4>
+              <span className="popup-sub">Tap a vendor to book it directly.</span>
+            </div>
+            <div className="popup-links">
+              {legacyLinks.map((l, i) => (
+                <a key={i} href="#" className="popup-link-row" onClick={e => e.preventDefault()}>
+                  <span className={"popup-link-icon " + l.icon}>{l.emoji}</span>
+                  <div className="popup-link-body">
+                    <div className="popup-link-title">{l.title}</div>
+                    <div className="popup-link-meta">{l.vendor}</div>
+                  </div>
+                  <div className="popup-link-cost">{l.cost === 0 ? "free" : fmtMoney(l.cost)}</div>
+                  <div className="popup-link-cta">Book on {l.host} ↗</div>
+                </a>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="popup-actions">
           <button

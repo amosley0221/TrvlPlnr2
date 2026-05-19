@@ -7,6 +7,6 @@
   <circle cx="294" cy="220" r="14" fill="#1a1330"/>
   <path d="M198 268 Q256 312 314 268" stroke="#1a1330" stroke-width="14" fill="none" stroke-linecap="round"/>
   <g transform="translate(256 410)" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="68" fill="#1a1330" text-anchor="middle">
-    <text>trvlplnnr</text>
+    <text>TrvlPlnr</text>
   </g>
 </svg>

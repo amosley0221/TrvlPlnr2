@@ -13,8 +13,8 @@ export default defineConfig({
         "icon.svg",
       ],
       manifest: {
-        name: "trvlplnnr — AI travel concierge",
-        short_name: "trvlplnnr",
+        name: "TrvlPlnr — AI travel concierge",
+        short_name: "TrvlPlnr",
         description:
           "One prompt, one plan, one tap to book. Flights, stays, cars, dinner res — all in one place.",
         theme_color: "#1a1330",

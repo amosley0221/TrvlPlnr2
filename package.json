@@ -1,9 +1,9 @@
 {
-  "name": "trvlplnnr",
+  "name": "trvlplnr",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "trvlplnnr — AI travel concierge (PWA)",
+  "description": "TrvlPlnr — AI travel concierge (PWA)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

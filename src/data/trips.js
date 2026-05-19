@@ -71,6 +71,34 @@ export const TRIPS = {
     dateFrom: "Sep 14", dateTo: "Sep 21", nights: 7,
     total: 3286, perPerson: 1643,
     hero: "🌴", color: "coral",
+    bookingOptions: {
+      flights: [
+        { airline: "JetBlue", flight: "B6 1487", route: "JFK → CUN", meta: "Nonstop · 4h 22m · 1 bag", price: 471, host: "jetblue.com", best: true },
+        { airline: "Delta", flight: "DL 612", route: "JFK → CUN", meta: "Nonstop · 4h 30m · main cabin", price: 512, host: "delta.com" },
+        { airline: "American", flight: "AA 88", route: "JFK → CUN", meta: "Nonstop · 4h 18m · main", price: 489, host: "aa.com" },
+        { airline: "Spirit", flight: "NK 234", route: "JFK → FLL → CUN", meta: "1 stop · 7h 50m · bare fare", price: 218, host: "spirit.com", tag: "cheapest" },
+        { airline: "Frontier", flight: "F9 1602", route: "JFK → MCO → CUN", meta: "1 stop · 8h 15m", price: 232, host: "flyfrontier.com" },
+        { airline: "AeroMéxico", flight: "AM 901", route: "JFK → CUN", meta: "Nonstop · lie-flat premier", price: 1240, host: "aeromexico.com", tag: "lux" },
+      ],
+      stays: [
+        { type: "Hotel", emoji: "🏨", name: "Casa Malca · Oceanfront suite", meta: "Boutique · 9.4/10 · breakfast incl.", price: 1418, host: "booking.com", best: true },
+        { type: "Airbnb", emoji: "🏡", name: "Airbnb · Jungle treehouse", meta: "2 BR · private pool · 4.92★ · self check-in", price: 980, host: "airbnb.com", tag: "cheaper" },
+        { type: "Hotel", emoji: "🌴", name: "Azulik · Adults-only villa", meta: "No electricity · iconic on Insta", price: 2640, host: "azulik.com", tag: "lux" },
+        { type: "Hotel", emoji: "🏖️", name: "Be Tulum · Beachfront", meta: "Spa + breakfast · 9.1/10", price: 1720, host: "betulum.com" },
+        { type: "Airbnb", emoji: "🏝️", name: "Airbnb · Aldea Zama 2BR", meta: "Walk to beach · pool · 4.87★", price: 640, host: "airbnb.com" },
+      ],
+      transport: [
+        { name: "Hertz · Compact car", meta: "Auto · 7 days · CUN pickup", price: 286, host: "hertz.com", best: true },
+        { name: "ADO shuttle bus", meta: "CUN → Tulum · 2h 10m · A/C", price: 32, host: "ado.com.mx", tag: "cheapest" },
+        { name: "Avis · SUV", meta: "Auto · 7 days · ski-rack ready", price: 412, host: "avis.com" },
+        { name: "Private transfer", meta: "Door-to-door · driver · A/C", price: 180, host: "happyshuttlecancun.com" },
+      ],
+      extras: [
+        { name: "Hartwood dinner reservation", meta: "Open-fire kitchen · res for 2", price: 140, host: "resy.com" },
+        { name: "Cenote Dos Ojos snorkel tour", meta: "Half-day · gear + guide", price: 95, host: "viator.com" },
+        { name: "Tulum Ruins early-entry", meta: "Skip-the-line · 2 hrs", price: 80, host: "getyourguide.com" },
+      ],
+    },
     breakdown: [
       { key: "flights", label: "Flights", val: 942, color: "var(--sky)", emoji: "✈️" },
       { key: "stay", label: "Stay", val: 1418, color: "var(--bubblegum)", emoji: "🏨" },
@@ -112,6 +140,35 @@ export const TRIPS = {
     dateFrom: "Oct 12", dateTo: "Oct 18", nights: 6,
     total: 4120, perPerson: 2060,
     hero: "🗼", color: "grape",
+    bookingOptions: {
+      flights: [
+        { airline: "Air France", flight: "AF 23", route: "JFK → CDG", meta: "Nonstop · 7h 10m · main cabin", price: 690, host: "airfrance.com", best: true },
+        { airline: "Delta", flight: "DL 264", route: "JFK → CDG", meta: "Nonstop · 7h 25m · main cabin", price: 720, host: "delta.com" },
+        { airline: "United", flight: "UA 57", route: "EWR → CDG", meta: "Nonstop · 7h 30m · main cabin", price: 702, host: "united.com" },
+        { airline: "American", flight: "AA 44", route: "JFK → CDG", meta: "Nonstop · 7h 20m", price: 715, host: "aa.com" },
+        { airline: "French Bee", flight: "BF 711", route: "EWR → CDG", meta: "Nonstop · 7h 15m · low-cost", price: 450, host: "frenchbee.com", tag: "cheapest" },
+        { airline: "La Compagnie", flight: "B0 24", route: "EWR → CDG", meta: "All-business · 76 seats", price: 2180, host: "lacompagnie.com", tag: "lux" },
+      ],
+      stays: [
+        { type: "Hotel", emoji: "🏨", name: "Hôtel Particulier Montmartre", meta: "Boutique · 6 nights · breakfast · 9.0/10", price: 1680, host: "booking.com", best: true },
+        { type: "Hotel", emoji: "🥂", name: "Le Bristol Paris", meta: "5-star palace · 9.5/10 · Michelin", price: 4200, host: "lebristolparis.com", tag: "lux" },
+        { type: "Airbnb", emoji: "🏡", name: "Airbnb · Marais 1BR loft", meta: "Walk everywhere · 4.94★", price: 920, host: "airbnb.com" },
+        { type: "Hotel", emoji: "🌃", name: "Hôtel des Grands Boulevards", meta: "Boutique · 8.9/10 · 9th arr.", price: 1100, host: "booking.com" },
+        { type: "Airbnb", emoji: "🥐", name: "Airbnb · Saint-Germain studio", meta: "Left bank · 4.89★ · charming", price: 760, host: "airbnb.com", tag: "cheaper" },
+      ],
+      transport: [
+        { name: "Navigo Découverte weekly pass", meta: "Unlimited Métro · 2 travelers", price: 70, host: "ratp.fr", best: true },
+        { name: "RER B · CDG ↔ city", meta: "Airport train · 35 min · return", price: 22, host: "sncf-connect.com" },
+        { name: "Uber · city rides budget", meta: "~10 rides for 6 days", price: 150, host: "uber.com" },
+        { name: "Hertz · Compact (if leaving city)", meta: "6 days · for day trips", price: 340, host: "hertz.com" },
+      ],
+      extras: [
+        { name: "Septime dinner reservation", meta: "Tasting menu · hard res", price: 290, host: "resy.com" },
+        { name: "Louvre skip-the-line", meta: "Timed entry + audio guide", price: 60, host: "getyourguide.com" },
+        { name: "Versailles Passport", meta: "Palace + gardens · 4 hrs", price: 130, host: "chateauversailles.fr" },
+        { name: "Sunset Seine cruise", meta: "1h 15m · champagne incl.", price: 90, host: "viator.com" },
+      ],
+    },
     breakdown: [
       { key: "flights", label: "Flights", val: 1380, color: "var(--sky)", emoji: "✈️" },
       { key: "stay", label: "Stay", val: 1680, color: "var(--bubblegum)", emoji: "🏨" },
@@ -153,6 +210,34 @@ export const TRIPS = {
     dateFrom: "Apr 03", dateTo: "Apr 12", nights: 9,
     total: 5840, perPerson: 2920,
     hero: "🍣", color: "bubblegum",
+    bookingOptions: {
+      flights: [
+        { airline: "ANA", flight: "NH 175", route: "LAX → HND", meta: "Nonstop · 11h 30m · premium econ", price: 1120, host: "ana.co.jp", best: true },
+        { airline: "JAL", flight: "JL 61", route: "LAX → HND", meta: "Nonstop · 11h 45m · premium econ", price: 1180, host: "jal.co.jp" },
+        { airline: "United", flight: "UA 32", route: "LAX → NRT", meta: "Nonstop · 12h 10m · main", price: 980, host: "united.com" },
+        { airline: "Delta", flight: "DL 167", route: "LAX → HND", meta: "Nonstop · 11h 50m · main", price: 1020, host: "delta.com" },
+        { airline: "ZIPAIR", flight: "ZG 1", route: "LAX → NRT", meta: "Nonstop · 11h 40m · low-cost", price: 620, host: "zipair.net", tag: "cheapest" },
+        { airline: "Singapore", flight: "SQ 11", route: "LAX → NRT", meta: "Nonstop · 11h 45m · business", price: 5800, host: "singaporeair.com", tag: "lux" },
+      ],
+      stays: [
+        { type: "Hotel", emoji: "🏯", name: "Hoshinoya Tokyo · Ryokan suite", meta: "9 nights · onsen · tatami", price: 1980, host: "booking.com", best: true },
+        { type: "Hotel", emoji: "🌃", name: "Park Hyatt Tokyo", meta: "Iconic · 9.3/10 · Shinjuku skyline", price: 2400, host: "hyatt.com" },
+        { type: "Airbnb", emoji: "🏡", name: "Airbnb · Shibuya loft", meta: "Crossing-adjacent · 4.88★", price: 890, host: "airbnb.com" },
+        { type: "Hotel", emoji: "🛏️", name: "Aman Tokyo", meta: "5-star · 9.5/10 · top of Otemachi", price: 3800, host: "aman.com", tag: "lux" },
+        { type: "Hotel", emoji: "🏨", name: "Toyoko Inn Shimbashi", meta: "Budget · 8.4/10 · clean & central", price: 480, host: "toyoko-inn.com", tag: "cheaper" },
+      ],
+      transport: [
+        { name: "JR Pass · 7-day", meta: "Whisper-quiet rail · activate at HND", price: 320, host: "japanrailpass.net", best: true },
+        { name: "Suica IC card + subway", meta: "Daily commute · top-up", price: 80, host: "suica.jp" },
+        { name: "Limousine Bus · HND transfers", meta: "Airport ↔ hotel · 1 hr", price: 35, host: "limousinebus.co.jp" },
+        { name: "Taxi night budget", meta: "Trains stop at midnight", price: 120, host: "japantaxi.jp" },
+      ],
+      extras: [
+        { name: "Sukiyabashi Jiro Roppongi", meta: "Omakase · 20 pieces", price: 380, host: "pocketconcierge.jp" },
+        { name: "Toyosu Market tuna auction", meta: "Tour + breakfast incl.", price: 95, host: "viator.com" },
+        { name: "Teamlab Borderless", meta: "Immersive art · timed entry", price: 75, host: "klook.com" },
+      ],
+    },
     breakdown: [
       { key: "flights", label: "Flights", val: 2240, color: "var(--sky)", emoji: "✈️" },
       { key: "stay", label: "Stay", val: 1980, color: "var(--bubblegum)", emoji: "🏨" },
@@ -190,6 +275,33 @@ export const TRIPS = {
     dateFrom: "Feb 14", dateTo: "Feb 21", nights: 7,
     total: 8420, perPerson: 2105,
     hero: "🏔️", color: "sky",
+    bookingOptions: {
+      flights: [
+        { airline: "United", flight: "UA 5821", route: "ORD → DEN → ASE", meta: "1 stop · 5h 40m · main", price: 670, host: "united.com", best: true },
+        { airline: "American", flight: "AA 1148", route: "ORD → DFW → ASE", meta: "1 stop · 7h 00m · main", price: 620, host: "aa.com" },
+        { airline: "Frontier", flight: "F9 622", route: "ORD → DEN (+ shuttle)", meta: "Nonstop to DEN · 4h drive after", price: 245, host: "flyfrontier.com", tag: "cheapest" },
+        { airline: "Spirit", flight: "NK 1242", route: "ORD → DEN (+ shuttle)", meta: "Nonstop to DEN · 4h drive after", price: 198, host: "spirit.com" },
+        { airline: "Southwest", flight: "WN 2018", route: "MDW → DEN (+ shuttle)", meta: "Nonstop · 2 bags free", price: 312, host: "southwest.com" },
+        { airline: "Charter", flight: "Private 12-seat", route: "ORD → ASE direct", meta: "Door-to-mountain · party of 4", price: 4800, host: "jetsuiteapp.com", tag: "lux" },
+      ],
+      stays: [
+        { type: "Airbnb", emoji: "🏡", name: "Airbnb · 4BR slope-side cabin", meta: "Hot tub · sleeps 6 · 7 nights", price: 3640, host: "airbnb.com", best: true },
+        { type: "Hotel", emoji: "⛷️", name: "The Little Nell", meta: "Ski-in/ski-out luxury · 9.4/10", price: 4800, host: "thelittlenell.com", tag: "lux" },
+        { type: "Hotel", emoji: "🏨", name: "St. Regis Aspen", meta: "5-star · 9.3/10 · butler service", price: 5200, host: "marriott.com" },
+        { type: "Airbnb", emoji: "🛷", name: "Airbnb · 3BR downtown condo", meta: "Walk to gondola · sleeps 4", price: 2180, host: "airbnb.com", tag: "cheaper" },
+        { type: "Hotel", emoji: "🏔️", name: "Hotel Aspen", meta: "Boutique · 8.6/10 · hot tub", price: 1420, host: "hotelaspen.com" },
+      ],
+      transport: [
+        { name: "Enterprise · 4WD SUV", meta: "7 days · ski racks · ASE pickup", price: 540, host: "enterprise.com", best: true },
+        { name: "Hertz · 4WD SUV", meta: "7 days · alternative", price: 480, host: "hertz.com" },
+        { name: "High Mountain Taxi shuttle", meta: "Airport transfers · party of 4", price: 280, host: "highmountaintaxi.com" },
+      ],
+      extras: [
+        { name: "Aspen Snowmass 4-day pass", meta: "All 4 mountains · party of 4", price: 640, host: "aspensnowmass.com" },
+        { name: "Cloud Nine Bistro lunch", meta: "On-mountain · res. required", price: 280, host: "resy.com" },
+        { name: "Snowcat dinner", meta: "Backcountry · 5-course", price: 180, host: "aspensnowmass.com" },
+      ],
+    },
     breakdown: [
       { key: "flights", label: "Flights", val: 2680, color: "var(--sky)", emoji: "✈️" },
       { key: "stay", label: "Cabin", val: 3640, color: "var(--bubblegum)", emoji: "🏡" },
@@ -226,6 +338,35 @@ export const TRIPS = {
     dateFrom: "Jun 08", dateTo: "Jun 20", nights: 12,
     total: 7240, perPerson: 3620,
     hero: "🏝️", color: "mint",
+    bookingOptions: {
+      flights: [
+        { airline: "Singapore Airlines", flight: "SQ 1", route: "SFO → SIN → DPS", meta: "1 stop · 22h · business class", price: 1320, host: "singaporeair.com", best: true },
+        { airline: "Qatar", flight: "QR 738", route: "SFO → DOH → DPS", meta: "1 stop · 23h 40m · qsuite", price: 1420, host: "qatarairways.com" },
+        { airline: "Cathay Pacific", flight: "CX 879", route: "SFO → HKG → DPS", meta: "1 stop · 22h 30m · premium econ", price: 1180, host: "cathaypacific.com" },
+        { airline: "Korean Air", flight: "KE 24", route: "SFO → ICN → DPS", meta: "1 stop · 22h 50m · main", price: 1250, host: "koreanair.com" },
+        { airline: "EVA Air", flight: "BR 7", route: "SFO → TPE → DPS", meta: "1 stop · 22h 15m · main", price: 1080, host: "evaair.com", tag: "cheapest" },
+        { airline: "Emirates", flight: "EK 226", route: "SFO → DXB → DPS", meta: "1 stop · 24h · first class", price: 6400, host: "emirates.com", tag: "lux" },
+      ],
+      stays: [
+        { type: "Hotel", emoji: "🌿", name: "Bambu Indah · Jungle villa", meta: "12 nights · private pool · sustainable", price: 3120, host: "booking.com", best: true },
+        { type: "Hotel", emoji: "🛕", name: "Four Seasons Sayan", meta: "5-star · Ayung river · 9.5/10", price: 5800, host: "fourseasons.com", tag: "lux" },
+        { type: "Airbnb", emoji: "🏡", name: "Airbnb · Ubud private villa", meta: "Rice paddy view · 4.93★ · 2BR", price: 1640, host: "airbnb.com" },
+        { type: "Hotel", emoji: "💆", name: "COMO Shambhala Estate", meta: "Wellness retreat · all-inclusive", price: 4200, host: "comohotels.com" },
+        { type: "Hotel", emoji: "🌺", name: "Padma Resort Ubud", meta: "Boutique · 9.1/10 · infinity pool", price: 1890, host: "padmaresortubud.com" },
+        { type: "Airbnb", emoji: "🌴", name: "Airbnb · Canggu beach villa", meta: "Beachfront · pool · 4.91★", price: 1240, host: "airbnb.com", tag: "cheaper" },
+      ],
+      transport: [
+        { name: "Private driver (full trip)", meta: "12 days · A/C SUV · all-inclusive", price: 420, host: "klook.com", best: true },
+        { name: "Scooter rental", meta: "12 days · faster in traffic", price: 80, host: "balibikerental.com", tag: "cheaper" },
+        { name: "Grab rides budget", meta: "App-based · ~30 rides", price: 180, host: "grab.com" },
+        { name: "Private airport transfer", meta: "DPS → Ubud · 1h 30m", price: 80, host: "klook.com" },
+      ],
+      extras: [
+        { name: "Tegallalang sunrise walk", meta: "Guided · 2 hrs", price: 45, host: "viator.com" },
+        { name: "Karsa Spa couples massage", meta: "90 min · in jungle", price: 110, host: "karsaspa.com" },
+        { name: "Locavore tasting menu", meta: "Top-50 World restaurant", price: 220, host: "locavore.co.id" },
+      ],
+    },
     breakdown: [
       { key: "flights", label: "Flights", val: 2640, color: "var(--sky)", emoji: "✈️" },
       { key: "stay", label: "Villa", val: 3120, color: "var(--bubblegum)", emoji: "🏡" },
@@ -262,6 +403,35 @@ export const TRIPS = {
     dateFrom: "Sep 25", dateTo: "Sep 29", nights: 4,
     total: 2980, perPerson: 993,
     hero: "🇵🇹", color: "sun",
+    bookingOptions: {
+      flights: [
+        { airline: "TAP Air Portugal", flight: "TP 218", route: "BOS → LIS", meta: "Nonstop · 6h 35m · main cabin", price: 510, host: "flytap.com", best: true },
+        { airline: "Delta", flight: "DL 130", route: "BOS → JFK → LIS", meta: "1 stop · 9h 40m · main", price: 423, host: "delta.com" },
+        { airline: "United", flight: "UA 964", route: "BOS → EWR → LIS", meta: "1 stop · 10h 15m · main", price: 388, host: "united.com" },
+        { airline: "Iberia", flight: "IB 2658", route: "BOS → MAD → LIS", meta: "1 stop · 11h 00m · main", price: 412, host: "iberia.com" },
+        { airline: "Azores Airlines", flight: "S4 122", route: "BOS → PDL → LIS", meta: "1 stop · 11h 30m", price: 342, host: "azoresairlines.pt", tag: "cheapest" },
+        { airline: "JetBlue Mint", flight: "B6 707", route: "JFK → LIS (BOS shuttle)", meta: "Lie-flat suite · feeder included", price: 1640, host: "jetblue.com", tag: "lux" },
+      ],
+      stays: [
+        { type: "Airbnb", emoji: "🏡", name: "Airbnb · Alfama loft (3BR)", meta: "4 nights · views of Tagus · 4.92★", price: 720, host: "airbnb.com", best: true },
+        { type: "Hotel", emoji: "🏨", name: "Memmo Alfama", meta: "Boutique · 9.1/10 · rooftop pool", price: 1240, host: "booking.com" },
+        { type: "Hotel", emoji: "👑", name: "Pousada de Lisboa", meta: "Historic palace · 8.9/10", price: 980, host: "pousadasdeportugal.com" },
+        { type: "Hotel", emoji: "🌆", name: "Sonder Castilho", meta: "Apt-hotel · 8.8/10 · 4 nights", price: 640, host: "sonder.com", tag: "cheaper" },
+        { type: "Hotel", emoji: "🥂", name: "The Lumiares Hotel & Spa", meta: "Chiado · 9.0/10 · skyline bar", price: 890, host: "booking.com" },
+      ],
+      transport: [
+        { name: "Metro day passes + Uber", meta: "Combo · 4 days · efficient", price: 80, host: "uber.com", best: true },
+        { name: "Bolt rides budget", meta: "Cheaper than Uber here", price: 65, host: "bolt.eu", tag: "cheaper" },
+        { name: "Hertz · Compact", meta: "4 days · for day trips out", price: 156, host: "hertz.com" },
+        { name: "Tram 28 multi-pass", meta: "Iconic yellow trams", price: 24, host: "carris.pt" },
+      ],
+      extras: [
+        { name: "Cervejaria Ramiro · seafood", meta: "Walk-in dinner · party of 3", price: 145, host: "resy.com" },
+        { name: "Fado night at Tasca do Chico", meta: "Live music · 2 hrs", price: 110, host: "viator.com" },
+        { name: "Sintra castles day trip", meta: "Guided · Pena + Quinta", price: 85, host: "getyourguide.com" },
+        { name: "Pastéis de Belém pilgrimage", meta: "Tram 15 · the original tarts", price: 12, host: "pasteisdebelem.pt" },
+      ],
+    },
     breakdown: [
       { key: "flights", label: "Flights", val: 1530, color: "var(--sky)", emoji: "✈️" },
       { key: "stay", label: "Airbnb", val: 720, color: "var(--bubblegum)", emoji: "🏡" },
