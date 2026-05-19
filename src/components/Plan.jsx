@@ -6,6 +6,7 @@ import {
 } from "../data/trips.js";
 import { DUFFEL_OFFER, BOOKING_HOTEL } from "../data/api.js";
 import { jsonHighlight } from "./Pipeline.jsx";
+import { exportTripAsPDF } from "../lib/export-pdf.js";
 
 export function NoMatchModal({ open, prompt, destinations, onClose, onPick }) {
   if (!open) return null;
@@ -236,6 +237,20 @@ export function TripPlanModal({
   const handleSave = () => onSave && onSave(effective);
   const handleArchive = () => onArchive && onArchive(effective);
 
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const handleExport = async () => {
+    if (pdfLoading) return;
+    setPdfLoading(true);
+    try {
+      await exportTripAsPDF(effective);
+    } catch (err) {
+      console.error("[export-pdf] failed:", err);
+      alert("Couldn't generate the PDF. Try again in a moment.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   return (
     <div className="book-modal" onClick={onClose}>
       <div className="book-card trip-popup" onClick={(e) => e.stopPropagation()}>
@@ -335,6 +350,11 @@ export function TripPlanModal({
           </>
         )}
 
+        <div className="popup-disclaimer">
+          <strong>Heads up:</strong> prices are AI estimates based on typical
+          rates for the route. Always verify on the booking site before purchasing.
+        </div>
+
         <div className="popup-actions">
           <button
             className="btn btn-accent"
@@ -349,6 +369,13 @@ export function TripPlanModal({
             disabled={alreadyArchived}
           >
             {alreadyArchived ? "✓ Archived" : "🗄️ Archive for later"}
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={handleExport}
+            disabled={pdfLoading}
+          >
+            {pdfLoading ? "Preparing PDF…" : "📄 Export PDF"}
           </button>
           <button className="btn btn-ghost" onClick={onClose}>
             Refine the plan first →
@@ -656,11 +683,26 @@ export function SwapModal({ kind, options, selectedIndex, onClose, onChoose }) {
 // Side-panel summary of the trip's currently-selected bookings, with a
 // "see more choices" link per category that opens the SwapModal.
 export function BookingsSummary({ trip, onOpenSwap }) {
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   if (!trip?.bookingOptions || !trip?.selection) return null;
   const flight = trip.bookingOptions.flights?.[trip.selection.flights];
   const stay = trip.bookingOptions.stays?.[trip.selection.stays];
   const transport = trip.bookingOptions.transport?.[trip.selection.transport];
   if (!flight || !stay || !transport) return null;
+
+  const handleExport = async () => {
+    if (pdfLoading) return;
+    setPdfLoading(true);
+    try {
+      await exportTripAsPDF(trip);
+    } catch (err) {
+      console.error("[export-pdf] failed:", err);
+      alert("Couldn't generate the PDF. Try again in a moment.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   return (
     <div className="side-card mint">
@@ -670,7 +712,7 @@ export function BookingsSummary({ trip, onOpenSwap }) {
       </p>
 
       <BookedRow
-        emoji="✈️"
+        emoji={flight.emoji || "✈️"}
         title={`${flight.airline} · ${flight.flight}`}
         meta={`${flight.route} · ${flight.meta}`}
         price={fmtMoney(flight.price) + " / pax"}
@@ -693,6 +735,15 @@ export function BookingsSummary({ trip, onOpenSwap }) {
         host={transport.host}
         onSeeMore={() => onOpenSwap("transport")}
       />
+
+      <button
+        className="btn btn-primary"
+        style={{ marginTop: 10, width: "100%" }}
+        onClick={handleExport}
+        disabled={pdfLoading}
+      >
+        {pdfLoading ? "Preparing PDF…" : "📄 Export PDF to share"}
+      </button>
     </div>
   );
 }

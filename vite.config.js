@@ -55,7 +55,21 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        // Keep the heavy PDF renderer (~500KB gzipped) out of the
+        // upfront precache — it's lazy-loaded on demand and gets
+        // runtime-cached the first time the user exports a PDF.
+        globIgnores: ["**/react-pdf.browser-*.js"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/react-pdf\.browser-[^/]+\.js$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "react-pdf-renderer",
+              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",

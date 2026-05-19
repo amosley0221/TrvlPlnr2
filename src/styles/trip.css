@@ -600,10 +600,25 @@
   white-space: nowrap;
 }
 
+.popup-disclaimer {
+  background: var(--bg-2);
+  border: 1.5px dashed var(--ink);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.4;
+  margin-top: 12px;
+}
+.popup-disclaimer strong {
+  color: var(--ink);
+  font-weight: 800;
+}
 .popup-actions {
   display: flex; flex-wrap: wrap; gap: 10px;
   justify-content: flex-end; align-items: center;
-  padding-top: 16px; border-top: 2.5px dashed var(--line);
+  padding-top: 16px; margin-top: 12px;
+  border-top: 2.5px dashed var(--line);
 }
 .popup-actions .btn:disabled {
   opacity: 0.55; cursor: default;
