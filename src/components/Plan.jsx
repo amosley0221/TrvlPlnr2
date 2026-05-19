@@ -266,8 +266,8 @@ export function TripPlanModal({
           <>
             <PopupSection
               icon="✈️"
-              title="Flights"
-              sub={`Pick one · ${opts.flights.length} carriers`}
+              title="Getting there"
+              sub={`Pick one · ${opts.flights.length} ${opts.flights.length === 1 ? "option" : "options"}`}
               items={opts.flights}
               category="flight"
               defaultEmoji="✈️"

@@ -93,6 +93,9 @@ function ChipPicker({ kind, value, onChange, onClose, anchorRect }) {
         style={{ left: pos.left, top: pos.top }}
         onClick={e => e.stopPropagation()}
       >
+        {kind === "home" && (
+          <HomePicker value={value} onChange={onChange} onDone={onClose} />
+        )}
         {kind === "travelers" && (
           <TravelersPicker value={value} onChange={onChange} onDone={onClose} />
         )}
@@ -107,6 +110,47 @@ function ChipPicker({ kind, value, onChange, onClose, anchorRect }) {
         )}
       </div>
     </>
+  );
+}
+
+function HomePicker({ value, onChange, onDone }) {
+  const [zip, setZip] = useState(value || "");
+  const valid = /^\d{5}$/.test(zip.trim());
+  const onZip = (e) => {
+    // Strip non-digits and cap at 5 chars so the field stays a valid US ZIP.
+    setZip(e.target.value.replace(/\D/g, "").slice(0, 5));
+  };
+  const onKey = (e) => {
+    if (e.key === "Enter" && valid) {
+      onChange(zip);
+      onDone();
+    }
+  };
+  return (
+    <div className="picker">
+      <div className="picker-head">🏠 Home location</div>
+      <p style={{ fontSize: 12, color: "var(--ink-2)", margin: "0 0 10px", lineHeight: 1.4 }}>
+        Enter your 5-digit US ZIP code. The AI uses it to figure out your nearest airport and decide whether driving, flying, or train makes more sense for your trip.
+      </p>
+      <div className="picker-budget">
+        <span className="picker-budget-sign" style={{ fontSize: 18 }}>🏠</span>
+        <input
+          type="text"
+          className="picker-budget-input"
+          value={zip}
+          onChange={onZip}
+          onKeyDown={onKey}
+          placeholder="e.g. 32735"
+          maxLength={5}
+          inputMode="numeric"
+          autoFocus
+        />
+      </div>
+      <div className="picker-actions">
+        <button className="btn btn-ghost" onClick={() => { onChange(null); onDone(); }}>Clear</button>
+        <button className="btn btn-accent" onClick={() => { onChange(zip); onDone(); }} disabled={!valid}>Set</button>
+      </div>
+    </div>
   );
 }
 
@@ -236,6 +280,7 @@ function DatesPicker({ value, onChange, onDone }) {
 }
 
 const CHIP_DEFS = [
+  { id: "home",      label: "Home", emoji: "🏠", color: "mint" },
   { id: "travelers", label: "Who", emoji: "👯", color: "sky" },
   { id: "budget",    label: "Budget", emoji: "💸", color: "lime" },
   { id: "vibe",      label: "Type", emoji: "💞", color: "coral" },
@@ -244,6 +289,7 @@ const CHIP_DEFS = [
 
 function chipDisplay(id, value) {
   if (value == null) return null;
+  if (id === "home") return "ZIP " + value;
   if (id === "travelers") return value + (value === 1 ? " traveler" : " travelers");
   if (id === "budget") return fmtUsd(value) + " budget";
   if (id === "vibe") {

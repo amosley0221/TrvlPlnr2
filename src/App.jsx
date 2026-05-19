@@ -64,7 +64,7 @@ function tripToBooking(trip) {
   };
 }
 
-const EMPTY_CONSTRAINTS = { travelers: null, budget: null, vibe: null, dates: null };
+const EMPTY_CONSTRAINTS = { home: null, travelers: null, budget: null, vibe: null, dates: null };
 
 export default function App() {
   const [view, setView] = useState("landing");

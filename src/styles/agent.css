@@ -75,6 +75,7 @@
 .chip.lime { background: var(--lime); }
 .chip.sun { background: var(--sunshine); }
 .chip.grape { background: var(--grape); color: white; }
+.chip.mint { background: var(--mint); }
 .chip.unset {
   background: transparent;
   border-style: dashed;

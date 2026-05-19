@@ -145,6 +145,9 @@ function buildUserMessage(prompt, constraints) {
   const c = constraints && typeof constraints === "object" ? constraints : null;
   if (c) {
     const set = [];
+    if (typeof c.home === "string" && /^\d{5}$/.test(c.home.trim())) {
+      set.push(`home US ZIP code: ${c.home.trim()}`);
+    }
     if (typeof c.travelers === "number" && c.travelers > 0) {
       set.push(`travelers: ${c.travelers}`);
     }
