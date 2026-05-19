@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { SAVED_TRIPS, MOCK_TRIP, TRIPS, matchTrip, applyConstraints } from "./data/trips.js";
+import {
+  SAVED_TRIPS,
+  MOCK_TRIP,
+  TRIPS,
+  matchTrip,
+  applyConstraints,
+  initialSelection,
+  recomputeTripForSelection,
+} from "./data/trips.js";
 import { PIPELINE } from "./data/api.js";
 import { THINKING_STEPS } from "./data/trips.js";
 import { Landing, Thinking, PlanView } from "./components/Views.jsx";
@@ -162,7 +170,13 @@ export default function App() {
     if (aiState.status === "loading") return;
 
     if (aiState.status === "ok") {
-      setTrip(aiState.trip);
+      // Stamp a default selection onto the AI trip so the popup +
+      // PlanView know what's "currently picked" from the moment it loads.
+      const aiTrip = aiState.trip;
+      const withSel = aiTrip.bookingOptions
+        ? { ...aiTrip, selection: initialSelection(aiTrip) }
+        : aiTrip;
+      setTrip(withSel);
       setAgentMood("happy");
       setView("plan");
       setPlanPopupOpen(true);
@@ -185,24 +199,28 @@ export default function App() {
     setLocks(l => ({ ...l, [key]: !l[key] }));
   };
 
-  const onSwap = (ev) => setSwap({ kind: ev.icon === "flight" ? "flight" : ev.icon === "hotel" ? "hotel" : "car", ev });
+  // Day-event "see more choices" button — map the event's icon to the
+  // matching bookingOptions key.
+  const onSwap = (ev) => {
+    const kind =
+      ev.icon === "flight"
+        ? "flights"
+        : ev.icon === "hotel"
+          ? "stays"
+          : "transport";
+    setSwap({ kind });
+  };
 
-  const applySwap = (opt) => {
+  // Side-panel "see more choices" button — kind is already the key.
+  const onSwapKind = (kind) => setSwap({ kind });
+
+  // Commit a swap: update the trip's selection for that kind and let
+  // recomputeTripForSelection recalculate total / breakdown / events.
+  const applySwap = (_option, index) => {
     if (!swap) return setSwap(null);
-    const targetKind = swap.kind;
-    const targetTitle = swap.ev.title;
-    setTrip(t => {
-      const days = t.days.map(d => ({
-        ...d,
-        events: d.events.map(e => {
-          if (e.icon !== targetKind) return e;
-          if (e.title !== targetTitle) return e;
-          return { ...e, title: opt.title, meta: opt.meta, cost: opt.price, was: e.cost > opt.price ? e.cost : undefined };
-        }),
-      }));
-      const breakdown = recomputeBreakdown(days, t.breakdown);
-      const total = breakdown.reduce((s, b) => s + b.val, 0);
-      return { ...t, days, breakdown, total, perPerson: Math.round(total / (t.travelers || 1)) };
+    setTrip((t) => {
+      const sel = { ...(t.selection || initialSelection(t)), [swap.kind]: index };
+      return recomputeTripForSelection(t, sel);
     });
     setSwap(null);
   };
@@ -235,8 +253,13 @@ export default function App() {
     setRefine("");
   };
 
-  const handleSaveCurrent = ({ archived = false } = {}) => {
-    setSaved(list => [tripToSaved(trip, { archived }), ...list]);
+  const handleSaveCurrent = (effective, { archived = false } = {}) => {
+    // Persist whatever the popup hands us (which already reflects the
+    // user's selection). Also write it back to the working trip so the
+    // PlanView stays in sync with the saved snapshot.
+    const tripToUse = effective || trip;
+    setTrip(tripToUse);
+    setSaved((list) => [tripToSaved(tripToUse, { archived }), ...list]);
     if (archived) setArchivedCurrentTrip(true);
     else setSavedCurrentTrip(true);
   };
@@ -304,7 +327,8 @@ export default function App() {
         {view === "plan" && (
           <PlanView
             trip={trip} locks={locks} toggleLock={toggleLock}
-            onSwap={onSwap} refine={refine} setRefine={setRefine}
+            onSwap={onSwap} onSwapKind={onSwapKind}
+            refine={refine} setRefine={setRefine}
             onApplyRefine={onApplyRefine}
             onBook={() => setBook("choose")}
             onInspect={setInspect}
@@ -338,8 +362,8 @@ export default function App() {
         trip={trip}
         open={planPopupOpen && view === "plan"}
         onClose={() => setPlanPopupOpen(false)}
-        onSave={() => handleSaveCurrent({ archived: false })}
-        onArchive={() => handleSaveCurrent({ archived: true })}
+        onSave={(effective) => handleSaveCurrent(effective, { archived: false })}
+        onArchive={(effective) => handleSaveCurrent(effective, { archived: true })}
         alreadySaved={savedCurrentTrip}
         alreadyArchived={archivedCurrentTrip}
       />
@@ -356,7 +380,13 @@ export default function App() {
         }}
       />
 
-      <SwapModal kind={swap?.kind} onClose={() => setSwap(null)} onChoose={applySwap} />
+      <SwapModal
+        kind={swap?.kind}
+        options={swap?.kind ? trip?.bookingOptions?.[swap.kind] : null}
+        selectedIndex={swap?.kind ? trip?.selection?.[swap.kind] : 0}
+        onClose={() => setSwap(null)}
+        onChoose={applySwap}
+      />
       <InspectModal kind={inspect} onClose={() => setInspect(null)} />
       <BookModal
         stage={book}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PromptBox, Suggestions, ThinkingLog } from "./Agent.jsx";
 import { Pipeline } from "./Pipeline.jsx";
-import { TripHeader, CostBreakdown, DayCard, RefineBar } from "./Plan.jsx";
+import { TripHeader, CostBreakdown, DayCard, RefineBar, BookingsSummary } from "./Plan.jsx";
 
 function FloatyShapes() {
   return (
@@ -80,7 +80,7 @@ export function Thinking({ prompt, constraints, thinkStep, pipeIdx }) {
   );
 }
 
-export function PlanView({ trip, locks, toggleLock, onSwap, refine, setRefine, onApplyRefine, onBook, onInspect }) {
+export function PlanView({ trip, locks, toggleLock, onSwap, onSwapKind, refine, setRefine, onApplyRefine, onBook, onInspect }) {
   return (
     <>
       <TripHeader trip={trip} />
@@ -91,23 +91,8 @@ export function PlanView({ trip, locks, toggleLock, onSwap, refine, setRefine, o
           ))}
         </div>
         <aside className="side">
+          <BookingsSummary trip={trip} onOpenSwap={onSwapKind} />
           <CostBreakdown trip={trip} />
-          <div className="side-card sun">
-            <h3>What's locked</h3>
-            <p style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 10 }}>Locked items stay when you ask me to re-plan.</p>
-            <div className="cost-row">
-              <span className="lbl">🔒 JetBlue 1487</span>
-              <span className="val" style={{ fontSize: 11 }}>flight out</span>
-            </div>
-            <div className="cost-row">
-              <span className="lbl" style={{ opacity: 0.6 }}>🔓 Casa Malca</span>
-              <span className="val" style={{ fontSize: 11, opacity: 0.6 }}>hotel</span>
-            </div>
-            <div className="cost-row">
-              <span className="lbl" style={{ opacity: 0.6 }}>🔓 Hertz car</span>
-              <span className="val" style={{ fontSize: 11, opacity: 0.6 }}>transport</span>
-            </div>
-          </div>
           <div className="side-card sky">
             <h3>Stats</h3>
             <div className="cost-row"><span className="lbl">⏱️ Total travel time</span><span className="val">8h 34m</span></div>

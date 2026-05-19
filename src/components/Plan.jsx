@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { fmtMoney, SWAP_OPTIONS } from "../data/trips.js";
+import {
+  fmtMoney,
+  initialSelection,
+  recomputeTripForSelection,
+} from "../data/trips.js";
 import { DUFFEL_OFFER, BOOKING_HOTEL } from "../data/api.js";
 import { jsonHighlight } from "./Pipeline.jsx";
 
@@ -96,76 +100,165 @@ export function extractBookingLinks(trip) {
   return links;
 }
 
-function OptionRow({ opt, category, defaultEmoji }) {
-  const title = opt.name || (opt.airline ? opt.airline + " · " + opt.flight : opt.flight);
+function OptionRow({ opt, category, defaultEmoji, isSelected, isStatic, onSelect }) {
+  const title =
+    opt.name || (opt.airline ? opt.airline + " · " + opt.flight : opt.flight);
   const sub = opt.airline && opt.route ? opt.route : opt.type || opt.airline || "";
+  const onRowClick = () => {
+    if (!isStatic && onSelect) onSelect();
+  };
+  const onKey = (e) => {
+    if (isStatic || !onSelect) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onSelect();
+    }
+  };
   return (
-    <a
-      href="#"
-      className={"popup-link-row" + (opt.best ? " best" : "")}
-      onClick={e => e.preventDefault()}
+    <div
+      className={
+        "popup-link-row" +
+        (opt.best ? " best" : "") +
+        (isSelected ? " selected" : "") +
+        (isStatic ? " static" : "")
+      }
+      onClick={onRowClick}
+      role={isStatic ? undefined : "radio"}
+      aria-checked={isStatic ? undefined : !!isSelected}
+      tabIndex={isStatic ? -1 : 0}
+      onKeyDown={onKey}
     >
-      <span className={"popup-link-icon " + category}>{opt.emoji || defaultEmoji}</span>
+      {!isStatic && (
+        <span className="popup-link-radio" aria-hidden>
+          {isSelected ? <span className="dot" /> : null}
+        </span>
+      )}
+      <span className={"popup-link-icon " + category}>
+        {opt.emoji || defaultEmoji}
+      </span>
       <div className="popup-link-body">
         <div className="popup-link-title">
           {title}
           {opt.best && <span className="best-badge">★ best fit</span>}
-          {opt.tag && !opt.best && <span className={"opt-tag " + opt.tag}>{opt.tag}</span>}
+          {opt.tag && !opt.best && (
+            <span className={"opt-tag " + opt.tag}>{opt.tag}</span>
+          )}
         </div>
         <div className="popup-link-meta">
-          {sub ? sub + " · " : ""}{opt.meta}
+          {sub ? sub + " · " : ""}
+          {opt.meta}
         </div>
       </div>
-      <div className="popup-link-cost">{opt.price === 0 ? "free" : fmtMoney(opt.price)}</div>
-      <div className="popup-link-cta">Book on {opt.host} ↗</div>
-    </a>
+      <div className="popup-link-cost">
+        {opt.price === 0 ? "free" : fmtMoney(opt.price)}
+      </div>
+      <a
+        href={opt.host ? "https://" + opt.host : "#"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="popup-link-cta"
+        onClick={(e) => e.stopPropagation()}
+      >
+        Book on {opt.host} ↗
+      </a>
+    </div>
   );
 }
 
-function PopupSection({ icon, title, sub, items, category, defaultEmoji }) {
+function PopupSection({
+  icon,
+  title,
+  sub,
+  items,
+  category,
+  defaultEmoji,
+  selectionKey,
+  selectedIndex,
+  onPick,
+}) {
   if (!items || !items.length) return null;
+  const isStatic = !selectionKey;
   return (
-    <section className="popup-section">
+    <section className="popup-section" role={isStatic ? undefined : "radiogroup"}>
       <div className="popup-section-head">
-        <h4><span className="popup-section-icon">{icon}</span> {title}</h4>
+        <h4>
+          <span className="popup-section-icon">{icon}</span> {title}
+        </h4>
         <span className="popup-sub">{sub}</span>
       </div>
       <div className="popup-links">
         {items.map((opt, i) => (
-          <OptionRow key={i} opt={opt} category={category} defaultEmoji={defaultEmoji} />
+          <OptionRow
+            key={i}
+            opt={opt}
+            category={category}
+            defaultEmoji={defaultEmoji}
+            isStatic={isStatic}
+            isSelected={!isStatic && selectedIndex === i}
+            onSelect={isStatic ? undefined : () => onPick(selectionKey, i)}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-export function TripPlanModal({ trip, open, onClose, onSave, onArchive, alreadySaved, alreadyArchived }) {
+export function TripPlanModal({
+  trip,
+  open,
+  onClose,
+  onSave,
+  onArchive,
+  alreadySaved,
+  alreadyArchived,
+}) {
+  const [selection, setSelection] = useState(() => initialSelection(trip));
+
+  // Reset selection back to the trip's default whenever a different trip
+  // opens. (We don't reset on every render — the user's in-progress picks
+  // should survive while the popup is open.)
+  useEffect(() => {
+    if (open) setSelection(trip?.selection || initialSelection(trip));
+  }, [open, trip?.id]);
+
   if (!open || !trip) return null;
   const opts = trip.bookingOptions;
-
-  // Fallback for trips that don't yet have curated bookingOptions
   const legacyLinks = !opts ? extractBookingLinks(trip) : [];
+
+  // Effective trip = base trip with the user's current picks applied. This
+  // is what we display, save, and archive — never the raw best-fit baseline.
+  const effective =
+    opts && selection ? recomputeTripForSelection(trip, selection) : trip;
+
+  const pick = (key, index) =>
+    setSelection((s) => ({ ...(s || {}), [key]: index }));
+
+  const handleSave = () => onSave && onSave(effective);
+  const handleArchive = () => onArchive && onArchive(effective);
 
   return (
     <div className="book-modal" onClick={onClose}>
-      <div className="book-card trip-popup" onClick={e => e.stopPropagation()}>
-        <button className="popup-close" onClick={onClose} aria-label="Close">✕</button>
+      <div className="book-card trip-popup" onClick={(e) => e.stopPropagation()}>
+        <button className="popup-close" onClick={onClose} aria-label="Close">
+          ✕
+        </button>
 
         <div className="popup-hero">
-          <span className="popup-hero-emoji">{trip.hero}</span>
+          <span className="popup-hero-emoji">{effective.hero}</span>
           <div>
             <div className="popup-eyebrow">your plan is ready</div>
             <h3 style={{ marginTop: 2 }}>
-              {trip.nights} nights in {trip.title}
+              {effective.nights} nights in {effective.title}
             </h3>
             <div className="popup-meta">
-              {trip.dateFrom} → {trip.dateTo} · {trip.travelers} travelers · {trip.vibe}
+              {effective.dateFrom} → {effective.dateTo} ·{" "}
+              {effective.travelers} travelers · {effective.vibe}
             </div>
           </div>
           <div className="popup-total">
             <div className="lbl">Trip total</div>
-            <div className="num">{fmtMoney(trip.total)}</div>
-            <div className="per">{fmtMoney(trip.perPerson)} / person</div>
+            <div className="num">{fmtMoney(effective.total)}</div>
+            <div className="per">{fmtMoney(effective.perPerson)} / person</div>
           </div>
         </div>
 
@@ -174,31 +267,40 @@ export function TripPlanModal({ trip, open, onClose, onSave, onArchive, alreadyS
             <PopupSection
               icon="✈️"
               title="Flights"
-              sub={`${opts.flights.length} carriers · ranked by best fit`}
+              sub={`Pick one · ${opts.flights.length} carriers`}
               items={opts.flights}
               category="flight"
               defaultEmoji="✈️"
+              selectionKey="flights"
+              selectedIndex={selection?.flights}
+              onPick={pick}
             />
             <PopupSection
               icon="🏨"
               title="Where you'll stay"
-              sub="Hotels + Airbnbs · taxes incl."
+              sub="Pick one · hotels + Airbnbs"
               items={opts.stays}
               category="hotel"
               defaultEmoji="🏨"
+              selectionKey="stays"
+              selectedIndex={selection?.stays}
+              onPick={pick}
             />
             <PopupSection
               icon="🚗"
               title="Getting around"
-              sub="Transport for the whole stay"
+              sub="Pick one · transport for the whole stay"
               items={opts.transport}
               category="car"
               defaultEmoji="🚗"
+              selectionKey="transport"
+              selectedIndex={selection?.transport}
+              onPick={pick}
             />
             <PopupSection
               icon="🎟️"
               title="On the ground"
-              sub="Dinner reservations + activities"
+              sub="Dinner reservations + activities (all suggested)"
               items={opts.extras}
               category="fun"
               defaultEmoji="🎟️"
@@ -212,13 +314,20 @@ export function TripPlanModal({ trip, open, onClose, onSave, onArchive, alreadyS
             </div>
             <div className="popup-links">
               {legacyLinks.map((l, i) => (
-                <a key={i} href="#" className="popup-link-row" onClick={e => e.preventDefault()}>
+                <a
+                  key={i}
+                  href="#"
+                  className="popup-link-row"
+                  onClick={(e) => e.preventDefault()}
+                >
                   <span className={"popup-link-icon " + l.icon}>{l.emoji}</span>
                   <div className="popup-link-body">
                     <div className="popup-link-title">{l.title}</div>
                     <div className="popup-link-meta">{l.vendor}</div>
                   </div>
-                  <div className="popup-link-cost">{l.cost === 0 ? "free" : fmtMoney(l.cost)}</div>
+                  <div className="popup-link-cost">
+                    {l.cost === 0 ? "free" : fmtMoney(l.cost)}
+                  </div>
                   <div className="popup-link-cta">Book on {l.host} ↗</div>
                 </a>
               ))}
@@ -229,14 +338,14 @@ export function TripPlanModal({ trip, open, onClose, onSave, onArchive, alreadyS
         <div className="popup-actions">
           <button
             className="btn btn-accent"
-            onClick={onSave}
+            onClick={handleSave}
             disabled={alreadySaved}
           >
             {alreadySaved ? "✓ Saved" : "💾 Save to Saved Trips"}
           </button>
           <button
             className="btn btn-ghost"
-            onClick={onArchive}
+            onClick={handleArchive}
             disabled={alreadyArchived}
           >
             {alreadyArchived ? "✓ Archived" : "🗄️ Archive for later"}
@@ -340,9 +449,9 @@ function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
         <div className="event-body">
           <div className="title">{ev.title}</div>
           <div className="meta">{ev.meta}{ev.vendor ? " · " + ev.vendor : ""}</div>
-          {(ev.icon === "flight" || ev.icon === "hotel" || ev.icon === "car") && (
+          {(ev.icon === "flight" || ev.icon === "hotel" || ev.icon === "car" || ev.icon === "train" || ev.icon === "bus") && (
             <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-              <button className="refine-chip" onClick={() => onSwap(ev)}>↺ Swap option</button>
+              <button className="refine-chip" onClick={() => onSwap(ev)}>↺ See more choices</button>
               <button className="refine-chip" onClick={onLock}
                 style={locked ? { background: "var(--lime)" } : {}}>
                 {locked ? "🔒 Locked" : "🔓 Lock this"}
@@ -409,35 +518,207 @@ export function RefineBar({ value, setValue, onApply, onBook }) {
   );
 }
 
-export function SwapModal({ kind, onClose, onChoose }) {
-  const [sel, setSel] = useState(0);
+// SwapModal — pick a different option from the trip's own bookingOptions.
+// kind is the bookingOptions key ("flights" | "stays" | "transport").
+const SWAP_TITLES = {
+  flights: "Pick a different flight",
+  stays: "Pick a different stay",
+  transport: "Pick a different transport",
+};
+const SWAP_CATEGORIES = {
+  flights: "flight",
+  stays: "hotel",
+  transport: "car",
+};
+const SWAP_DEFAULT_EMOJI = {
+  flights: "✈️",
+  stays: "🏨",
+  transport: "🚗",
+};
+
+function swapRowLabel(kind, o) {
+  if (kind === "flights") {
+    return (o.airline || "") + (o.flight ? " · " + o.flight : "");
+  }
+  return o.name || "";
+}
+
+function swapRowSub(kind, o) {
+  if (kind === "flights") return o.route || "";
+  if (kind === "stays") return o.type || "";
+  return "";
+}
+
+export function SwapModal({ kind, options, selectedIndex, onClose, onChoose }) {
+  const [sel, setSel] = useState(selectedIndex ?? 0);
+
+  useEffect(() => {
+    setSel(selectedIndex ?? 0);
+  }, [kind, selectedIndex]);
+
   if (!kind) return null;
-  const opts = SWAP_OPTIONS[kind] || [];
-  const titles = { flight: "Pick a different flight", hotel: "Pick a different stay", car: "Pick a different transport" };
+  if (!Array.isArray(options) || options.length === 0) return null;
+
+  const category = SWAP_CATEGORIES[kind] || "fun";
+  const defaultEmoji = SWAP_DEFAULT_EMOJI[kind] || "🎟️";
+
   return (
     <div className="book-modal" onClick={onClose}>
-      <div className="book-card" onClick={e => e.stopPropagation()} style={{ width: "min(620px, 100%)" }}>
-        <h3>{titles[kind]}</h3>
-        <p className="lead">Your other locked choices stay put. We'll re-cost the trip after.</p>
-        <div className="options-list">
-          {opts.map((o, i) => (
-            <div key={i} className={"option-row " + (sel === i ? "selected" : "")} onClick={() => setSel(i)}>
-              <div className="opt-icon" style={{ background: i === 0 ? "var(--sky)" : i === 1 ? "var(--lime)" : "var(--paper)" }}>{o.emoji}</div>
-              <div>
-                <div className="opt-title">{o.title}</div>
-                <div className="opt-meta">{o.meta}</div>
+      <div className="book-card trip-popup" onClick={(e) => e.stopPropagation()}>
+        <button className="popup-close" onClick={onClose} aria-label="Close">✕</button>
+        <h3 style={{ marginBottom: 4 }}>{SWAP_TITLES[kind] || "Pick a different option"}</h3>
+        <p className="lead">
+          We'll re-cost the trip with your new pick. Other selections stay put.
+        </p>
+        <div className="popup-links" role="radiogroup" style={{ marginBottom: 18 }}>
+          {options.map((o, i) => {
+            const title = swapRowLabel(kind, o);
+            const sub = swapRowSub(kind, o);
+            return (
+              <div
+                key={i}
+                role="radio"
+                aria-checked={sel === i}
+                tabIndex={0}
+                className={
+                  "popup-link-row" +
+                  (o.best ? " best" : "") +
+                  (sel === i ? " selected" : "")
+                }
+                onClick={() => setSel(i)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSel(i);
+                  }
+                }}
+              >
+                <span className="popup-link-radio" aria-hidden>
+                  {sel === i ? <span className="dot" /> : null}
+                </span>
+                <span className={"popup-link-icon " + category}>
+                  {o.emoji || defaultEmoji}
+                </span>
+                <div className="popup-link-body">
+                  <div className="popup-link-title">
+                    {title}
+                    {o.best && <span className="best-badge">★ best fit</span>}
+                    {o.tag && !o.best && (
+                      <span className={"opt-tag " + o.tag}>{o.tag}</span>
+                    )}
+                  </div>
+                  <div className="popup-link-meta">
+                    {sub ? sub + " · " : ""}
+                    {o.meta}
+                  </div>
+                </div>
+                <div className="popup-link-cost">
+                  {o.price === 0 ? "free" : fmtMoney(o.price)}
+                </div>
+                <a
+                  href={o.host ? "https://" + o.host : "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="popup-link-cta"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Book on {o.host} ↗
+                </a>
               </div>
-              {o.tag && <span className={"opt-tag " + o.tag}>{o.tag}</span>}
-              {!o.tag && <span></span>}
-              <div className="opt-price">{fmtMoney(o.price)}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 18, justifyContent: "flex-end" }}>
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-accent" onClick={() => onChoose(opts[sel])}>Use this one</button>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            justifyContent: "flex-end",
+            paddingTop: 12,
+            borderTop: "2.5px dashed var(--line)",
+          }}
+        >
+          <button className="btn btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="btn btn-accent"
+            onClick={() => onChoose(options[sel], sel)}
+            disabled={sel === selectedIndex}
+          >
+            {sel === selectedIndex ? "No change" : "Use this one"}
+          </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Side-panel summary of the trip's currently-selected bookings, with a
+// "see more choices" link per category that opens the SwapModal.
+export function BookingsSummary({ trip, onOpenSwap }) {
+  if (!trip?.bookingOptions || !trip?.selection) return null;
+  const flight = trip.bookingOptions.flights?.[trip.selection.flights];
+  const stay = trip.bookingOptions.stays?.[trip.selection.stays];
+  const transport = trip.bookingOptions.transport?.[trip.selection.transport];
+  if (!flight || !stay || !transport) return null;
+
+  return (
+    <div className="side-card mint">
+      <h3>Your bookings</h3>
+      <p className="booked-hint">
+        The options you picked. Tap "see more choices" to swap any of them.
+      </p>
+
+      <BookedRow
+        emoji="✈️"
+        title={`${flight.airline} · ${flight.flight}`}
+        meta={`${flight.route} · ${flight.meta}`}
+        price={fmtMoney(flight.price) + " / pax"}
+        host={flight.host}
+        onSeeMore={() => onOpenSwap("flights")}
+      />
+      <BookedRow
+        emoji={stay.emoji || "🏨"}
+        title={stay.name}
+        meta={`${stay.type} · ${stay.meta}`}
+        price={fmtMoney(stay.price)}
+        host={stay.host}
+        onSeeMore={() => onOpenSwap("stays")}
+      />
+      <BookedRow
+        emoji="🚗"
+        title={transport.name}
+        meta={transport.meta}
+        price={transport.price === 0 ? "free" : fmtMoney(transport.price)}
+        host={transport.host}
+        onSeeMore={() => onOpenSwap("transport")}
+      />
+    </div>
+  );
+}
+
+function BookedRow({ emoji, title, meta, price, host, onSeeMore }) {
+  return (
+    <div className="booked-row">
+      <span className="booked-emoji">{emoji}</span>
+      <div className="booked-body">
+        <div className="booked-title">{title}</div>
+        <div className="booked-meta">{meta}</div>
+        <div className="booked-actions">
+          <a
+            className="booked-link"
+            href={host ? "https://" + host : "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Book on {host} ↗
+          </a>
+          <button className="booked-more" onClick={onSeeMore}>
+            see more choices →
+          </button>
+        </div>
+      </div>
+      <div className="booked-price">{price}</div>
     </div>
   );
 }

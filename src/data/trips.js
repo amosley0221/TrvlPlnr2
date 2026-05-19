@@ -556,15 +556,6 @@ export const VIBE_OPTIONS = [
 
 export const BUDGET_PRESETS = [1000, 2000, 3500, 5000, 10000];
 
-// matchTrip(prompt, constraints?) -> trip | null
-// Scores each template by:
-//   keyword hits in the prompt (weight 2)
-//   vibeTag matches against the constraints.vibe (weight 3)
-//   travelers count proximity to constraints.travelers (weight 1, only if set)
-//   total under constraints.budget (weight 1, only if set)
-// Returns null if no destination keyword from any template was seen in the
-// prompt AND no vibe constraint was set — that tells the caller "I don't
-// know where they want to go." No more random fallback.
 export function matchTrip(prompt, constraints = {}) {
   const p = (prompt || "").toLowerCase();
   const trips = Object.values(TRIPS);
@@ -602,6 +593,174 @@ export function matchTrip(prompt, constraints = {}) {
   return best;
 }
 
+// ============================================================
+// Per-section selection model for the bookingOptions popup.
+// initialSelection picks the "best" entry in each array.
+// recomputeTripForSelection returns a trip whose total, breakdown,
+// and day-by-day events reflect the user's chosen flight / stay /
+// transport options (extras stay as suggestions).
+// ============================================================
+
+export function initialSelection(trip) {
+  const opts = trip?.bookingOptions;
+  if (!opts) return null;
+  const pick = (arr) => {
+    if (!Array.isArray(arr) || arr.length === 0) return 0;
+    const i = arr.findIndex((o) => o && o.best);
+    return i >= 0 ? i : 0;
+  };
+  return {
+    flights: pick(opts.flights),
+    stays: pick(opts.stays),
+    transport: pick(opts.transport),
+  };
+}
+
+function reverseRoute(route) {
+  if (!route || typeof route !== "string" || !route.includes("→")) return route;
+  return route
+    .split("→")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .reverse()
+    .join(" → ");
+}
+
+function flightNumberFromCode(code) {
+  if (!code) return "";
+  const parts = String(code).trim().split(/\s+/);
+  return parts.length > 1 ? parts.slice(1).join(" ") : code;
+}
+
+function applyFlightToEvents(days, flight) {
+  if (!flight) return days;
+  const coords = [];
+  days.forEach((d, di) =>
+    d.events.forEach((e, ei) => {
+      if (e.icon === "flight") coords.push([di, ei]);
+    }),
+  );
+  const lastIdx = coords.length > 1 ? coords.length - 1 : -1;
+  return days.map((d, di) => ({
+    ...d,
+    events: d.events.map((e, ei) => {
+      if (e.icon !== "flight") return e;
+      const rank = coords.findIndex(([x, y]) => x === di && y === ei);
+      const isReturn = rank === lastIdx && lastIdx > 0;
+      const num = flightNumberFromCode(flight.flight);
+      const route = isReturn ? reverseRoute(flight.route) : flight.route;
+      return {
+        ...e,
+        title: `${flight.airline} ${num} · ${route}`,
+        meta: flight.meta,
+        cost: flight.price,
+        vendor: flight.airline,
+        was: undefined,
+      };
+    }),
+  }));
+}
+
+function applyStayToEvents(days, stay) {
+  if (!stay) return days;
+  let firstHotelDone = false;
+  return days.map((d) => ({
+    ...d,
+    events: d.events.map((e) => {
+      if (e.icon !== "hotel") return e;
+      // Only stamp the price on the check-in event; later hotel events
+      // (rare, e.g. moving hotels) keep their cost so we don't double-bill.
+      const isFirst = !firstHotelDone;
+      if (isFirst) firstHotelDone = true;
+      return {
+        ...e,
+        title: stay.name,
+        meta: stay.meta,
+        emoji: stay.emoji || e.emoji,
+        cost: isFirst ? stay.price : 0,
+        vendor: stay.host,
+        was: undefined,
+      };
+    }),
+  }));
+}
+
+function applyTransportToEvents(days, transport) {
+  if (!transport) return days;
+  let used = false;
+  return days.map((d) => ({
+    ...d,
+    events: d.events.map((e) => {
+      const isTransport =
+        e.icon === "car" || e.icon === "train" || e.icon === "bus";
+      if (!isTransport) return e;
+      if (used) return e; // leave return-drop-off / second-leg events alone
+      used = true;
+      return {
+        ...e,
+        title: transport.name,
+        meta: transport.meta,
+        cost: transport.price,
+        vendor: transport.host,
+        was: undefined,
+      };
+    }),
+  }));
+}
+
+export function recomputeTripForSelection(baseTrip, selection) {
+  if (!baseTrip?.bookingOptions || !selection) return baseTrip;
+
+  const opts = baseTrip.bookingOptions;
+  const flight = opts.flights?.[selection.flights];
+  const stay = opts.stays?.[selection.stays];
+  const transport = opts.transport?.[selection.transport];
+  if (!flight || !stay || !transport) return baseTrip;
+
+  // Baseline is the "best fit" entry — that's what trip.total currently
+  // reflects when the trip first comes out of the AI or local matcher.
+  const baseFlight = opts.flights.find((o) => o.best) || opts.flights[0];
+  const baseStay = opts.stays.find((o) => o.best) || opts.stays[0];
+  const baseTransport = opts.transport.find((o) => o.best) || opts.transport[0];
+
+  // If the trip already has a selection attached (saved trip being
+  // re-opened), normalize the baseline back to "best fit" by reversing
+  // out the prior selection's delta before applying the new one.
+  const prev = baseTrip.selection || initialSelection(baseTrip);
+  const prevFlight = opts.flights[prev.flights] || baseFlight;
+  const prevStay = opts.stays[prev.stays] || baseStay;
+  const prevTransport = opts.transport[prev.transport] || baseTransport;
+
+  const travelers = baseTrip.travelers || 1;
+  const revert =
+    (baseFlight.price - prevFlight.price) * travelers +
+    (baseStay.price - prevStay.price) +
+    (baseTransport.price - prevTransport.price);
+  const baselineTotal = baseTrip.total + revert;
+
+  const delta =
+    (flight.price - baseFlight.price) * travelers +
+    (stay.price - baseStay.price) +
+    (transport.price - baseTransport.price);
+
+  const total = baselineTotal + delta;
+  const perPerson = Math.round(total / travelers);
+
+  const breakdown = (baseTrip.breakdown || []).map((b) => {
+    if (b.key === "flights") return { ...b, val: flight.price * travelers };
+    if (b.key === "stay") return { ...b, val: stay.price };
+    if (b.key === "car") return { ...b, val: transport.price };
+    return b;
+  });
+
+  let days = baseTrip.days || [];
+  days = applyFlightToEvents(days, flight);
+  days = applyStayToEvents(days, stay);
+  days = applyTransportToEvents(days, transport);
+
+  return { ...baseTrip, total, perPerson, breakdown, days, selection };
+}
+
 // Overlay user-set constraints onto the matched trip's headline fields so
 // the popup shows what they asked for instead of the template defaults.
 export function applyConstraints(trip, constraints = {}) {
@@ -627,6 +786,10 @@ export function applyConstraints(trip, constraints = {}) {
   if (constraints.vibe) {
     const vibeLabel = VIBE_OPTIONS.find(v => v.id === constraints.vibe)?.label;
     if (vibeLabel) out = { ...out, vibe: vibeLabel };
+  }
+  // Stamp a default selection if the trip has bookingOptions but none yet.
+  if (out.bookingOptions && !out.selection) {
+    out = { ...out, selection: initialSelection(out) };
   }
   return out;
 }

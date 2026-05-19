@@ -407,10 +407,46 @@
 .popup-link-row.best {
   border-width: 2.5px;
   background: linear-gradient(180deg, #fffef7 0%, var(--paper) 100%);
-  box-shadow: var(--shadow-hard);
   outline: 2px solid var(--sunshine);
   outline-offset: -2px;
 }
+.popup-link-row.selected {
+  border-width: 3px;
+  border-color: var(--coral);
+  background: #fff5f6;
+  box-shadow: var(--shadow-hard);
+}
+.popup-link-row.best.selected {
+  outline-color: var(--coral);
+  background: #fff5f6;
+}
+.popup-link-row[role="radio"] { cursor: pointer; }
+.popup-link-row.static { cursor: default; }
+.popup-link-row.static:hover { transform: none; background: var(--paper); }
+
+.popup-link-radio {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid var(--ink);
+  background: var(--paper);
+  display: inline-grid; place-items: center;
+  flex-shrink: 0;
+}
+.popup-link-row.selected .popup-link-radio {
+  background: var(--coral);
+  border-color: var(--ink);
+}
+.popup-link-radio .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+/* Reshape the grid when the radio is present (4-col → 5-col) */
+.popup-link-row[role="radio"] {
+  grid-template-columns: 24px 40px 1fr auto auto;
+}
+
 .popup-link-row .popup-link-title {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
@@ -584,7 +620,77 @@
   .popup-link-row {
     grid-template-columns: 40px 1fr auto;
   }
+  .popup-link-row[role="radio"] {
+    grid-template-columns: 22px 36px 1fr auto;
+  }
   .popup-link-cta { display: none; }
+}
+
+/* ============ BOOKINGS SUMMARY (PlanView side panel) ============ */
+.booked-hint {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin: 0 0 12px;
+}
+.booked-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-top: 1.5px dashed var(--line);
+}
+.booked-row:first-of-type { border-top: none; padding-top: 4px; }
+.booked-emoji {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  font-size: 18px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+}
+.booked-body {
+  min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.booked-title {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+.booked-meta {
+  font-size: 11px;
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+.booked-actions {
+  display: flex; flex-wrap: wrap; gap: 6px 10px;
+  margin-top: 4px;
+}
+.booked-link {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px; font-weight: 700;
+  color: var(--coral);
+  text-decoration: none;
+}
+.booked-link:hover { text-decoration: underline; }
+.booked-more {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px; font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+.booked-more:hover { background: var(--sunshine); }
+.booked-price {
+  font-family: "Fraunces", serif;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
 }
 
 /* ============ SAVED-TRIP ACTIONS ============ */
