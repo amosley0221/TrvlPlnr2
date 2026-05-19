@@ -1,10 +1,37 @@
 services:
+  # Backend: Node API service that calls Claude Sonnet 4.6 with prompt caching.
+  # Set ANTHROPIC_API_KEY in the Render dashboard (Environment → Add Env Var,
+  # mark as Secret). Set CORS_ORIGIN to your static-site URL once it's known.
+  - type: web
+    name: trvlplnnr-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci
+    startCommand: node server/index.mjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  # Frontend: Vite-built React static site.
+  # Set VITE_API_URL to the trvlplnnr-api URL (e.g.
+  # https://trvlplnnr-api.onrender.com) in the dashboard so the AI calls
+  # land at the right origin. Without it, the site falls back to the
+  # local template matcher and the AI features are disabled.
   - type: web
     name: trvlplnnr
     runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     pullRequestPreviewsEnabled: true
+    envVars:
+      - key: VITE_API_URL
+        sync: false
     headers:
       - path: /sw.js
         name: Cache-Control

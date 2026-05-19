@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SAVED_TRIPS, MOCK_TRIP, TRIPS, matchTrip, applyConstraints } from "./data/trips.js";
 import { PIPELINE } from "./data/api.js";
 import { THINKING_STEPS } from "./data/trips.js";
@@ -7,6 +7,7 @@ import { SavedTrips } from "./components/Saved.jsx";
 import { Bookings } from "./components/Bookings.jsx";
 import { SwapModal, BookModal, InspectModal, TripPlanModal, NoMatchModal } from "./components/Plan.jsx";
 import { FloatingAgent } from "./components/FloatingAgent.jsx";
+import { planTripWithAI, AI_ENABLED } from "./lib/api.js";
 
 function recomputeBreakdown(days, original) {
   const buckets = { flights: 0, stay: 0, car: 0, food: 0, fun: 0 };
@@ -78,17 +79,28 @@ export default function App() {
   const [savedCurrentTrip, setSavedCurrentTrip] = useState(false);
   const [archivedCurrentTrip, setArchivedCurrentTrip] = useState(false);
 
+  // AI request state — the popup waits on whichever of (animation,
+  // network response) finishes second.
+  const [aiState, setAiState] = useState({ status: "idle" }); // idle | loading | ok | error
+  const [animationDone, setAnimationDone] = useState(false);
+  const aiAbortRef = useRef(null);
+
   const startThinking = () => startThinkingWith(prompt);
 
   const startThinkingWith = (text) => {
-    const matched = matchTrip(text, constraints);
-    if (!matched) {
+    // Compute a guaranteed-good trip up front: if the local matcher hits
+    // one of our templates, we use it as the fallback for AI failures.
+    // If it returns null AND AI isn't available, we can't plan anything.
+    const localMatch = matchTrip(text, constraints);
+    if (!localMatch && !AI_ENABLED) {
       setNoMatchPrompt(text);
       return;
     }
-    const overlaid = applyConstraints(matched, constraints);
+
+    const localTrip = localMatch ? applyConstraints(localMatch, constraints) : null;
+
     setPrompt(text);
-    setTrip(overlaid);
+    if (localTrip) setTrip(localTrip);
     setLocks({});
     setView("thinking");
     setThinkStep(0);
@@ -96,6 +108,29 @@ export default function App() {
     setAgentMood("thinking");
     setSavedCurrentTrip(false);
     setArchivedCurrentTrip(false);
+    setAnimationDone(false);
+
+    // Cancel any prior in-flight request.
+    if (aiAbortRef.current) aiAbortRef.current.abort();
+
+    if (AI_ENABLED) {
+      const ctrl = new AbortController();
+      aiAbortRef.current = ctrl;
+      setAiState({ status: "loading" });
+      planTripWithAI(text, constraints, { signal: ctrl.signal })
+        .then((aiTrip) => {
+          if (ctrl.signal.aborted) return;
+          setAiState({ status: "ok", trip: aiTrip });
+        })
+        .catch((err) => {
+          if (err?.name === "AbortError" || ctrl.signal.aborted) return;
+          console.warn("[AI] planTrip failed:", err?.message || err);
+          setAiState({ status: "error", error: err?.message || String(err) });
+        });
+    } else {
+      // No AI — go straight to the local trip when animation finishes.
+      setAiState({ status: "error", error: "AI disabled" });
+    }
   };
 
   useEffect(() => {
@@ -113,14 +148,38 @@ export default function App() {
       const id = setTimeout(() => setThinkStep(s => s + 1), 900);
       return () => clearTimeout(id);
     } else {
-      const id = setTimeout(() => {
-        setAgentMood("happy");
-        setView("plan");
-        setPlanPopupOpen(true);
-      }, 900);
+      const id = setTimeout(() => setAnimationDone(true), 900);
       return () => clearTimeout(id);
     }
   }, [view, thinkStep]);
+
+  // Wait for both the animation AND the AI request before transitioning
+  // to the plan view. If the AI errored and we have no local trip,
+  // surface the NoMatchModal instead.
+  useEffect(() => {
+    if (view !== "thinking") return;
+    if (!animationDone) return;
+    if (aiState.status === "loading") return;
+
+    if (aiState.status === "ok") {
+      setTrip(aiState.trip);
+      setAgentMood("happy");
+      setView("plan");
+      setPlanPopupOpen(true);
+      return;
+    }
+
+    // status === "error" — fall back to whatever local trip we computed.
+    if (trip) {
+      setAgentMood("happy");
+      setView("plan");
+      setPlanPopupOpen(true);
+    } else {
+      setNoMatchPrompt(prompt);
+      setView("landing");
+      setAgentMood("idle");
+    }
+  }, [view, animationDone, aiState, trip, prompt]);
 
   const toggleLock = (key) => {
     setLocks(l => ({ ...l, [key]: !l[key] }));
