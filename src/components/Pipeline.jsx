@@ -1,6 +1,6 @@
-// Pipeline / "peek under the hood" view — streams API tool calls
+import { PIPELINE } from "../data/api.js";
 
-function jsonHighlight(value, indent = 0) {
+export function jsonHighlight(value, indent = 0) {
   const pad = "  ".repeat(indent);
   if (value === null) return <span className="b">null</span>;
   if (typeof value === "string") return <span className="s">"{value}"</span>;
@@ -43,8 +43,7 @@ function jsonHighlight(value, indent = 0) {
   return <span>{String(value)}</span>;
 }
 
-function truncateForDisplay(obj, depth = 0) {
-  // Make giant Duffel offer fit — strip ids and trim arrays
+export function truncateForDisplay(obj, depth = 0) {
   if (Array.isArray(obj)) {
     return obj.slice(0, 2).map(v => truncateForDisplay(v, depth + 1)).concat(obj.length > 2 ? [`…(+${obj.length - 2})`] : []);
   }
@@ -57,23 +56,6 @@ function truncateForDisplay(obj, depth = 0) {
     return out;
   }
   return obj;
-}
-
-function Pipeline({ activeIdx }) {
-  const frames = window.PIPELINE.slice(0, activeIdx + 1);
-  return (
-    <div className="pipeline">
-      <div className="pipeline-head">
-        <div className="dot3"><span className="a"></span><span className="b"></span><span className="c"></span></div>
-        <span className="label">agent.runtime · trip-tulum-001</span>
-        <span className="grow"></span>
-        <span className="pill-live">LIVE</span>
-      </div>
-      <div className="pipeline-body" ref={el => { if (el) el.scrollTop = el.scrollHeight; }}>
-        {frames.map((f, i) => <Frame key={i} f={f} isLast={i === frames.length - 1} />)}
-      </div>
-    </div>
-  );
 }
 
 function Frame({ f, isLast }) {
@@ -117,4 +99,19 @@ function Frame({ f, isLast }) {
   return null;
 }
 
-Object.assign(window, { Pipeline, jsonHighlight, truncateForDisplay });
+export function Pipeline({ activeIdx }) {
+  const frames = PIPELINE.slice(0, activeIdx + 1);
+  return (
+    <div className="pipeline">
+      <div className="pipeline-head">
+        <div className="dot3"><span className="a"></span><span className="b"></span><span className="c"></span></div>
+        <span className="label">agent.runtime · trip-tulum-001</span>
+        <span className="grow"></span>
+        <span className="pill-live">LIVE</span>
+      </div>
+      <div className="pipeline-body" ref={el => { if (el) el.scrollTop = el.scrollHeight; }}>
+        {frames.map((f, i) => <Frame key={i} f={f} isLast={i === frames.length - 1} />)}
+      </div>
+    </div>
+  );
+}

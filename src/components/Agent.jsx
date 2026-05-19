@@ -1,8 +1,6 @@
-// Agent character + thinking log
-const { useState, useEffect, useRef } = React;
+import { THINKING_STEPS, SUGGESTIONS } from "../data/trips.js";
 
-function Agent({ mood = "idle", caption }) {
-  // mood: idle, thinking, happy, surprised
+export function Agent({ mood = "idle" }) {
   return (
     <div className="agent-stage">
       <div className={"agent " + mood}>
@@ -29,11 +27,10 @@ function Agent({ mood = "idle", caption }) {
   );
 }
 
-function ThinkingLog({ activeStep }) {
-  const steps = window.THINKING_STEPS;
+export function ThinkingLog({ activeStep }) {
   return (
     <div className="think-log">
-      {steps.slice(0, activeStep + 1).map((s, i) => {
+      {THINKING_STEPS.slice(0, activeStep + 1).map((s, i) => {
         const isActive = i === activeStep;
         const isDone = i < activeStep;
         return (
@@ -50,7 +47,7 @@ function ThinkingLog({ activeStep }) {
   );
 }
 
-function PromptBox({ value, setValue, chips, setChips, onSend, thinking }) {
+export function PromptBox({ value, setValue, chips, setChips, onSend, thinking }) {
   const onKey = (e) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSend();
   };
@@ -93,10 +90,10 @@ function PromptBox({ value, setValue, chips, setChips, onSend, thinking }) {
   );
 }
 
-function Suggestions({ onPick, disabled }) {
+export function Suggestions({ onPick, disabled }) {
   return (
     <div className="suggestions">
-      {window.SUGGESTIONS.map((s, i) => (
+      {SUGGESTIONS.map((s, i) => (
         <button key={i} className="suggestion" onClick={() => onPick(s.label, true)} disabled={disabled}>
           <span className="emoji">{s.emoji}</span>
           <span>{s.label}</span>
@@ -105,5 +102,3 @@ function Suggestions({ onPick, disabled }) {
     </div>
   );
 }
-
-Object.assign(window, { Agent, ThinkingLog, PromptBox, Suggestions });

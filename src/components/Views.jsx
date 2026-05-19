@@ -1,4 +1,8 @@
-// Top-level view sections: Landing, Thinking, PlanView
+import { useState } from "react";
+import { Agent, PromptBox, Suggestions, ThinkingLog } from "./Agent.jsx";
+import { Pipeline } from "./Pipeline.jsx";
+import { TripHeader, CostBreakdown, DayCard, RefineBar } from "./Plan.jsx";
+
 function FloatyShapes() {
   return (
     <>
@@ -18,7 +22,7 @@ function FloatyShapes() {
   );
 }
 
-function Landing({ prompt, setPrompt, chips, setChips, onSend, agentMood, onPickSuggestion }) {
+export function Landing({ prompt, setPrompt, chips, setChips, onSend, agentMood, onPickSuggestion }) {
   return (
     <>
       <section className="hero">
@@ -51,8 +55,8 @@ function Landing({ prompt, setPrompt, chips, setChips, onSend, agentMood, onPick
   );
 }
 
-function Thinking({ prompt, chips, thinkStep, pipeIdx }) {
-  const [peek, setPeek] = React.useState(false);
+export function Thinking({ prompt, chips, thinkStep, pipeIdx }) {
+  const [peek, setPeek] = useState(false);
   return (
     <section className="hero" style={{ paddingTop: 20 }}>
       <span className="eyebrow"><span className="dot"></span> thinking…</span>
@@ -80,7 +84,7 @@ function Thinking({ prompt, chips, thinkStep, pipeIdx }) {
   );
 }
 
-function PlanView({ trip, locks, toggleLock, onSwap, refine, setRefine, onApplyRefine, onBook, onInspect }) {
+export function PlanView({ trip, locks, toggleLock, onSwap, refine, setRefine, onApplyRefine, onBook, onInspect }) {
   return (
     <>
       <TripHeader trip={trip} />
@@ -130,5 +134,3 @@ function PlanView({ trip, locks, toggleLock, onSwap, refine, setRefine, onApplyR
     </>
   );
 }
-
-Object.assign(window, { Landing, Thinking, PlanView });

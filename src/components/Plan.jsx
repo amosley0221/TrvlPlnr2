@@ -1,7 +1,9 @@
-// Trip plan view + refine + booking
-const { useState: useStateP, useEffect: useEffectP, useMemo } = React;
+import { useState, useEffect } from "react";
+import { fmtMoney, SWAP_OPTIONS } from "../data/trips.js";
+import { DUFFEL_OFFER, BOOKING_HOTEL } from "../data/api.js";
+import { jsonHighlight } from "./Pipeline.jsx";
 
-function TripHeader({ trip }) {
+export function TripHeader({ trip }) {
   return (
     <div className="trip-header">
       <div className="trip-meta">
@@ -16,14 +18,14 @@ function TripHeader({ trip }) {
       <p className="trip-sub">{trip.destination}</p>
       <div className="total-block">
         <div className="label">Trip total</div>
-        <div className="num">{window.fmtMoney(trip.total)}</div>
-        <div className="per">{window.fmtMoney(trip.perPerson)} / person</div>
+        <div className="num">{fmtMoney(trip.total)}</div>
+        <div className="per">{fmtMoney(trip.perPerson)} / person</div>
       </div>
     </div>
   );
 }
 
-function CostBreakdown({ trip }) {
+export function CostBreakdown({ trip }) {
   const total = trip.breakdown.reduce((s, b) => s + b.val, 0);
   return (
     <div className="side-card">
@@ -36,20 +38,20 @@ function CostBreakdown({ trip }) {
       {trip.breakdown.map(b => (
         <div key={b.key} className="cost-row">
           <span className="lbl"><span style={{ width: 12, height: 12, borderRadius: 4, border: "2px solid var(--ink)", display: "inline-block", background: b.color }}></span> {b.emoji} {b.label}</span>
-          <span className="val">{window.fmtMoney(b.val)}</span>
+          <span className="val">{fmtMoney(b.val)}</span>
         </div>
       ))}
       <div className="total">
         <span style={{ fontFamily: "Fraunces, serif", fontSize: 18 }}>Total</span>
-        <span className="num">{window.fmtMoney(total)}</span>
+        <span className="num">{fmtMoney(total)}</span>
       </div>
     </div>
   );
 }
 
-function InspectModal({ kind, onClose }) {
+export function InspectModal({ kind, onClose }) {
   if (!kind) return null;
-  const data = kind === "flight" ? window.DUFFEL_OFFER : window.BOOKING_HOTEL;
+  const data = kind === "flight" ? DUFFEL_OFFER : BOOKING_HOTEL;
   const label = kind === "flight" ? "Duffel · GET /air/offers/{id}" : "Booking · GET /hotels/{id}/availability";
   return (
     <div className="book-modal" onClick={onClose}>
@@ -68,7 +70,7 @@ function InspectModal({ kind, onClose }) {
               <span className="ms">cached 2m ago</span>
             </div>
             <div className="res-body">
-              <pre className="json">{window.jsonHighlight(data)}</pre>
+              <pre className="json">{jsonHighlight(data)}</pre>
             </div>
           </div>
           <div style={{ color: "#a89dc8", fontSize: 11, fontFamily: "JetBrains Mono, monospace", padding: "8px 4px" }}>
@@ -94,7 +96,7 @@ function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
           {(ev.icon === "flight" || ev.icon === "hotel" || ev.icon === "car") && (
             <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
               <button className="refine-chip" onClick={() => onSwap(ev)}>↺ Swap option</button>
-              <button className={"refine-chip " + (locked ? "" : "")} onClick={onLock}
+              <button className="refine-chip" onClick={onLock}
                 style={locked ? { background: "var(--lime)" } : {}}>
                 {locked ? "🔒 Locked" : "🔓 Lock this"}
               </button>
@@ -106,14 +108,14 @@ function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
         </div>
       </div>
       <div className="event-cost">
-        {ev.was && <span className="strike">{window.fmtMoney(ev.was)}</span>}
-        {ev.cost === 0 ? <span style={{ color: "var(--green, #1f8a5b)" }}>free</span> : window.fmtMoney(ev.cost)}
+        {ev.was && <span className="strike">{fmtMoney(ev.was)}</span>}
+        {ev.cost === 0 ? <span style={{ color: "var(--green, #1f8a5b)" }}>free</span> : fmtMoney(ev.cost)}
       </div>
     </div>
   );
 }
 
-function DayCard({ day, idx, onSwap, locks, toggleLock, onInspect }) {
+export function DayCard({ day, idx, onSwap, locks, toggleLock, onInspect }) {
   const dayCost = day.events.reduce((s, e) => s + (e.cost || 0), 0);
   return (
     <div className="day-card">
@@ -122,7 +124,7 @@ function DayCard({ day, idx, onSwap, locks, toggleLock, onInspect }) {
           <span className="badge">{idx + 1}</span>
           <span>{day.title}</span>
         </div>
-        <div className="day-date">{day.label} · <strong>{window.fmtMoney(dayCost)}</strong></div>
+        <div className="day-date">{day.label} · <strong>{fmtMoney(dayCost)}</strong></div>
       </div>
       {day.events.map((ev, i) => (
         <EventRow key={i} ev={ev} onSwap={onSwap}
@@ -134,7 +136,7 @@ function DayCard({ day, idx, onSwap, locks, toggleLock, onInspect }) {
   );
 }
 
-function RefineBar({ value, setValue, onApply, onBook }) {
+export function RefineBar({ value, setValue, onApply, onBook }) {
   const quick = ["Cheaper hotel", "Nonstop flights only", "Add a beach day", "Drop the rental car", "Closer to dinner spots"];
   return (
     <div className="refine">
@@ -160,11 +162,11 @@ function RefineBar({ value, setValue, onApply, onBook }) {
   );
 }
 
-function SwapModal({ kind, onClose, onChoose }) {
+export function SwapModal({ kind, onClose, onChoose }) {
+  const [sel, setSel] = useState(0);
   if (!kind) return null;
-  const opts = window.SWAP_OPTIONS[kind] || [];
+  const opts = SWAP_OPTIONS[kind] || [];
   const titles = { flight: "Pick a different flight", hotel: "Pick a different stay", car: "Pick a different transport" };
-  const [sel, setSel] = useStateP(0);
   return (
     <div className="book-modal" onClick={onClose}>
       <div className="book-card" onClick={e => e.stopPropagation()} style={{ width: "min(620px, 100%)" }}>
@@ -180,7 +182,7 @@ function SwapModal({ kind, onClose, onChoose }) {
               </div>
               {o.tag && <span className={"opt-tag " + o.tag}>{o.tag}</span>}
               {!o.tag && <span></span>}
-              <div className="opt-price">{window.fmtMoney(o.price)}</div>
+              <div className="opt-price">{fmtMoney(o.price)}</div>
             </div>
           ))}
         </div>
@@ -193,8 +195,39 @@ function SwapModal({ kind, onClose, onChoose }) {
   );
 }
 
-function BookModal({ stage, onClose, onConfirm, onSavedLinks }) {
-  // stage: choose | card | progress | done
+function BookingProgress() {
+  const items = [
+    { ico: "✈️", t: "Booking JetBlue JFK → CUN" },
+    { ico: "🏨", t: "Reserving Casa Malca" },
+    { ico: "🚗", t: "Renting from Hertz" },
+    { ico: "🍽️", t: "Holding dinner reservations" },
+    { ico: "🎟️", t: "Confirming activities" },
+  ];
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (step < items.length) {
+      const id = setTimeout(() => setStep(s => s + 1), 700);
+      return () => clearTimeout(id);
+    }
+  }, [step]);
+  return (
+    <div className="booking-progress">
+      {items.map((it, i) => {
+        const cls = i < step ? "done" : i === step ? "active" : "";
+        return (
+          <div key={i} className={"bp-row " + cls}>
+            <span className="ico">{it.ico}</span>
+            <span>{it.t}</span>
+            {i < step && <span className="check">✓</span>}
+            {i === step && <span className="spin"></span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function BookModal({ stage, onClose, onConfirm, onSavedLinks }) {
   if (!stage) return null;
   return (
     <div className="book-modal" onClick={stage === "progress" ? null : onClose}>
@@ -284,37 +317,3 @@ function BookModal({ stage, onClose, onConfirm, onSavedLinks }) {
     </div>
   );
 }
-
-function BookingProgress() {
-  const items = [
-    { ico: "✈️", t: "Booking JetBlue JFK → CUN" },
-    { ico: "🏨", t: "Reserving Casa Malca" },
-    { ico: "🚗", t: "Renting from Hertz" },
-    { ico: "🍽️", t: "Holding dinner reservations" },
-    { ico: "🎟️", t: "Confirming activities" },
-  ];
-  const [step, setStep] = useStateP(0);
-  useEffectP(() => {
-    if (step < items.length) {
-      const id = setTimeout(() => setStep(s => s + 1), 700);
-      return () => clearTimeout(id);
-    }
-  }, [step]);
-  return (
-    <div className="booking-progress">
-      {items.map((it, i) => {
-        const cls = i < step ? "done" : i === step ? "active" : "";
-        return (
-          <div key={i} className={"bp-row " + cls}>
-            <span className="ico">{it.ico}</span>
-            <span>{it.t}</span>
-            {i < step && <span className="check">✓</span>}
-            {i === step && <span className="spin"></span>}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-Object.assign(window, { TripHeader, CostBreakdown, DayCard, RefineBar, SwapModal, BookModal, InspectModal });

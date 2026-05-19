@@ -1,6 +1,4 @@
-// Multiple trip templates. Each prompt routes to one of these.
-
-window.SUGGESTIONS = [
+export const SUGGESTIONS = [
   { emoji: "🏖️", label: "Beach week in Tulum" },
   { emoji: "🗼", label: "Paris anniversary" },
   { emoji: "🎿", label: "Snowboard trip to Aspen" },
@@ -9,14 +7,14 @@ window.SUGGESTIONS = [
   { emoji: "🏝️", label: "Bali honeymoon" },
 ];
 
-window.QUICK_CHIPS = [
+export const QUICK_CHIPS = [
   { id: "people", label: "2 travelers", emoji: "👯", color: "sky" },
   { id: "budget", label: "$3,500 budget", emoji: "💸", color: "lime" },
   { id: "vibe", label: "Romantic", emoji: "💞", color: "coral" },
   { id: "dates", label: "Sep 14 → Sep 21", emoji: "📅", color: "sun" },
 ];
 
-window.THINKING_STEPS = [
+export const THINKING_STEPS = [
   { emoji: "🌍", text: "Reading your prompt and pulling location data" },
   { emoji: "✈️", text: "Scanning 47 flights across 6 carriers" },
   { emoji: "🏨", text: "Comparing 124 hotels and 86 Airbnbs" },
@@ -25,7 +23,7 @@ window.THINKING_STEPS = [
   { emoji: "✨", text: "Stitching it all into a plan" },
 ];
 
-window.SWAP_OPTIONS = {
+export const SWAP_OPTIONS = {
   flight: [
     { emoji: "✈️", title: "JetBlue 1487 · Nonstop", meta: "4h 22m · arr 13:57", price: 471, tag: "fast" },
     { emoji: "✈️", title: "Spirit 234 · 1 stop in FLL", meta: "7h 50m · arr 17:25", price: 218, tag: "cheap" },
@@ -47,21 +45,21 @@ window.SWAP_OPTIONS = {
   ],
 };
 
-window.SAVED_TRIPS = [
+export const SAVED_TRIPS = [
   { id: "saved-1", title: "Tokyo cherry blossom run", where: "Tokyo + Kyoto · 10 days", hero: "🌸", color: "bubblegum", savedAt: "Saved Aug 02", priceWhenSaved: 4890, priceNow: 4612, nights: 10, travelers: 2 },
   { id: "saved-2", title: "Iceland ring road", where: "Reykjavik loop · 8 days", hero: "🌋", color: "sky", savedAt: "Saved Jul 18", priceWhenSaved: 3120, priceNow: 3445, nights: 8, travelers: 2 },
   { id: "saved-3", title: "Lisbon long weekend", where: "Lisbon · 4 nights", hero: "🇵🇹", color: "sun", savedAt: "Saved Aug 21", priceWhenSaved: 1280, priceNow: 1280, nights: 4, travelers: 2 },
   { id: "saved-4", title: "Banff family ski", where: "Banff · 6 days · 4 ppl", hero: "🏔️", color: "mint", savedAt: "Saved Aug 30", priceWhenSaved: 6420, priceNow: 5980, nights: 6, travelers: 4 },
 ];
 
-window.fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
-window.fmtDelta = (a, b) => {
+export const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
+export const fmtDelta = (a, b) => {
   const d = b - a;
   if (d === 0) return { dir: "flat", text: "no change", val: 0 };
   return { dir: d > 0 ? "up" : "down", text: (d > 0 ? "+" : "−") + "$" + Math.abs(d).toLocaleString(), val: d };
 };
 
-window.TRIPS = {
+export const TRIPS = {
   tulum: {
     id: "trip-tulum",
     title: "Tulum",
@@ -288,10 +286,9 @@ window.TRIPS = {
   },
 };
 
-// Pick a trip from the user's prompt + chips
-window.matchTrip = function(prompt) {
+export function matchTrip(prompt) {
   const p = (prompt || "").toLowerCase();
-  const trips = Object.values(window.TRIPS);
+  const trips = Object.values(TRIPS);
   let best = null, bestScore = 0;
   for (const t of trips) {
     let score = 0;
@@ -299,9 +296,7 @@ window.matchTrip = function(prompt) {
     if (score > bestScore) { bestScore = score; best = t; }
   }
   if (best) return best;
-  // No match — pick a random one so the user sees variety
   return trips[Math.floor(Math.random() * trips.length)];
-};
+}
 
-// keep MOCK_TRIP for backward compat — points at Tulum
-window.MOCK_TRIP = window.TRIPS.tulum;
+export const MOCK_TRIP = TRIPS.tulum;

@@ -1,7 +1,4 @@
-// API-shape mock data — Duffel for flights, Booking-style for hotels, etc.
-// Plus a pipeline script that the "peek under the hood" view replays.
-
-window.DUFFEL_OFFER = {
+export const DUFFEL_OFFER = {
   id: "off_0000Ay8Z6Hv8YQ5fz3X9aB",
   total_amount: "471.32",
   total_currency: "USD",
@@ -37,7 +34,7 @@ window.DUFFEL_OFFER = {
   expires_at: "2025-09-12T15:32:00Z",
 };
 
-window.BOOKING_HOTEL = {
+export const BOOKING_HOTEL = {
   hotel_id: 1842016,
   name: "Casa Malca",
   type: "Boutique Hotel",
@@ -59,9 +56,7 @@ window.BOOKING_HOTEL = {
   policies: { check_in: "15:00", check_out: "12:00", deposit_required: false },
 };
 
-// Pipeline = ordered list of agent reasoning + tool-call frames.
-// Each frame: { kind: 'thought' | 'tool' | 'result', ... }
-window.PIPELINE = [
+export const PIPELINE = [
   { kind: "thought", text: "Parse the prompt: extract destination, dates, travelers, vibe, budget." },
   { kind: "tool", name: "parse_intent", req: { prompt: "anniversary in tulum sept 14-21 for 2, budget $3500, beach vibes" } },
   { kind: "result", from: "parse_intent", data: {
@@ -84,13 +79,13 @@ window.PIPELINE = [
   }},
   { kind: "result", from: "duffel.offer_requests.create", data: { request_id: "orq_0000Ay8Z6Hv...", offers_found: 47, top_carriers: ["B6","DL","AA","AM","NK"] } },
   { kind: "tool", name: "duffel.offers.list", req: { offer_request_id: "orq_0000Ay8Z6Hv...", sort: "total_amount", limit: 5 } },
-  { kind: "result", from: "duffel.offers.list", data: window.DUFFEL_OFFER, summary: "Best nonstop = JetBlue 1487 @ $471.32 — fits budget, fastest, anniversary-friendly evening arrival." },
+  { kind: "result", from: "duffel.offers.list", data: DUFFEL_OFFER, summary: "Best nonstop = JetBlue 1487 @ $471.32 — fits budget, fastest, anniversary-friendly evening arrival." },
   { kind: "thought", text: "Search hotels in Tulum beachfront, 9.0+ score, 7 nights." },
   { kind: "tool", name: "booking.hotels.search", req: {
       city_id: "tulum", check_in: "2025-09-14", check_out: "2025-09-21",
       guests: { adults: 2 }, min_review: 9.0, tags: ["beachfront","boutique"],
   }},
-  { kind: "result", from: "booking.hotels.search", data: window.BOOKING_HOTEL, summary: "Casa Malca — oceanfront, 9.4/10, $1,418 total. Locks in 9-Sep cancellation buffer." },
+  { kind: "result", from: "booking.hotels.search", data: BOOKING_HOTEL, summary: "Casa Malca — oceanfront, 9.4/10, $1,418 total. Locks in 9-Sep cancellation buffer." },
   { kind: "thought", text: "Ground transport — compare rental car vs. ADO bus vs. private shuttle." },
   { kind: "tool", name: "rentalcars.search", req: { pickup: "CUN", dropoff: "CUN", from: "2025-09-14T14:30", to: "2025-09-21T13:00", driver_age: 32 } },
   { kind: "result", from: "rentalcars.search", data: { vendor: "Hertz", category: "compact", total: 286.00, deep_link: "rentalcars.com/..." } },

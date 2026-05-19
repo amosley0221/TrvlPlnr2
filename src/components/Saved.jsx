@@ -1,5 +1,6 @@
-// Saved trips view with price tracking
-function SavedTrips({ trips, onOpen }) {
+import { fmtMoney, fmtDelta } from "../data/trips.js";
+
+export function SavedTrips({ trips, onOpen }) {
   return (
     <div>
       <div className="section-head">
@@ -11,7 +12,7 @@ function SavedTrips({ trips, onOpen }) {
       </div>
       <div className="saved-grid">
         {trips.map(t => {
-          const d = window.fmtDelta(t.priceWhenSaved, t.priceNow);
+          const d = fmtDelta(t.priceWhenSaved, t.priceNow);
           const pctChange = ((t.priceNow - t.priceWhenSaved) / t.priceWhenSaved) * 100;
           const bigSwing = Math.abs(pctChange) >= 5;
           return (
@@ -30,9 +31,9 @@ function SavedTrips({ trips, onOpen }) {
               <div className="where">{t.where} · {t.travelers} ppl</div>
               <div className="price-row">
                 <div>
-                  <div className="price">{window.fmtMoney(t.priceNow)}</div>
+                  <div className="price">{fmtMoney(t.priceNow)}</div>
                   <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                    was {window.fmtMoney(t.priceWhenSaved)} · {t.savedAt}
+                    was {fmtMoney(t.priceWhenSaved)} · {t.savedAt}
                   </div>
                 </div>
                 <span className={"delta " + d.dir}>
@@ -53,5 +54,3 @@ function SavedTrips({ trips, onOpen }) {
     </div>
   );
 }
-
-Object.assign(window, { SavedTrips });

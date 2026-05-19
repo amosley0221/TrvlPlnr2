@@ -1,7 +1,11 @@
-// Main app — state machine: landing → thinking → plan → booked
-const { useState, useEffect } = React;
+import { useState, useEffect } from "react";
+import { QUICK_CHIPS, SAVED_TRIPS, MOCK_TRIP, matchTrip } from "./data/trips.js";
+import { PIPELINE } from "./data/api.js";
+import { THINKING_STEPS } from "./data/trips.js";
+import { Landing, Thinking, PlanView } from "./components/Views.jsx";
+import { SavedTrips } from "./components/Saved.jsx";
+import { SwapModal, BookModal, InspectModal } from "./components/Plan.jsx";
 
-// Recompute the cost-breakdown buckets from the current days, preserving labels/colors.
 function recomputeBreakdown(days, original) {
   const buckets = { flights: 0, stay: 0, car: 0, food: 0, fun: 0 };
   const map = { flight: "flights", hotel: "stay", car: "car", train: "car", bus: "car", food: "food", fun: "fun" };
@@ -12,29 +16,27 @@ function recomputeBreakdown(days, original) {
   return original.map(b => ({ ...b, val: buckets[b.key] || 0 }));
 }
 
-
-function App() {
-  const [view, setView] = useState("landing"); // landing | thinking | plan | saved
+export default function App() {
+  const [view, setView] = useState("landing");
   const [prompt, setPrompt] = useState("");
-  const [chips, setChips] = useState(window.QUICK_CHIPS.map(c => ({ ...c, active: true })));
+  const [chips, setChips] = useState(QUICK_CHIPS.map(c => ({ ...c, active: true })));
   const [thinkStep, setThinkStep] = useState(0);
   const [pipeIdx, setPipeIdx] = useState(0);
   const [inspect, setInspect] = useState(null);
   const [agentMood, setAgentMood] = useState("idle");
-  const [locks, setLocks] = useState({ "Sun, Sep 14-0": true }); // flight locked by default
+  const [locks, setLocks] = useState({ "Sun, Sep 14-0": true });
   const [refine, setRefine] = useState("");
-  const [swap, setSwap] = useState(null); // { kind, ev }
+  const [swap, setSwap] = useState(null);
   const [book, setBook] = useState(null);
-  const [trip, setTrip] = useState(window.MOCK_TRIP);
+  const [trip, setTrip] = useState(MOCK_TRIP);
 
   const startThinking = () => startThinkingWith(prompt);
 
   const startThinkingWith = (text) => {
-    // Pick a trip based on prompt + active chips.
-    const matched = window.matchTrip(text);
+    const matched = matchTrip(text);
     setPrompt(text);
     setTrip(matched);
-    setLocks({}); // reset locks for new trip
+    setLocks({});
     setView("thinking");
     setThinkStep(0);
     setPipeIdx(0);
@@ -43,9 +45,7 @@ function App() {
 
   useEffect(() => {
     if (view !== "thinking") return;
-    const steps = window.THINKING_STEPS;
-    // Advance pipeline ~2x faster than story log so both finish roughly together
-    const pipeMax = window.PIPELINE.length - 1;
+    const pipeMax = PIPELINE.length - 1;
     if (pipeIdx < pipeMax) {
       const id = setTimeout(() => setPipeIdx(p => p + 1), 380);
       return () => clearTimeout(id);
@@ -54,8 +54,7 @@ function App() {
 
   useEffect(() => {
     if (view !== "thinking") return;
-    const steps = window.THINKING_STEPS;
-    if (thinkStep < steps.length - 1) {
+    if (thinkStep < THINKING_STEPS.length - 1) {
       const id = setTimeout(() => setThinkStep(s => s + 1), 900);
       return () => clearTimeout(id);
     } else {
@@ -73,10 +72,9 @@ function App() {
 
   const onSwap = (ev) => setSwap({ kind: ev.icon === "flight" ? "flight" : ev.icon === "hotel" ? "hotel" : "car", ev });
 
-  // Apply a swap: replace the matching event in the trip and recompute totals.
   const applySwap = (opt) => {
     if (!swap) return setSwap(null);
-    const targetKind = swap.kind; // 'flight' | 'hotel' | 'car'
+    const targetKind = swap.kind;
     const targetTitle = swap.ev.title;
     setTrip(t => {
       const days = t.days.map(d => ({
@@ -94,7 +92,6 @@ function App() {
     setSwap(null);
   };
 
-  // Apply a refine quick action — mutate trip in a believable way.
   const onApplyRefine = () => {
     const text = refine.toLowerCase();
     setTrip(t => {
@@ -132,7 +129,7 @@ function App() {
         </div>
         <nav className="nav-links">
           <button className={"nav-link " + (view === "landing" || view === "thinking" || view === "plan" ? "active" : "")} onClick={() => setView("landing")}>Plan a trip</button>
-          <button className={"nav-link " + (view === "saved" ? "active" : "")} onClick={() => setView("saved")}>Saved trips ({window.SAVED_TRIPS.length})</button>
+          <button className={"nav-link " + (view === "saved" ? "active" : "")} onClick={() => setView("saved")}>Saved trips ({SAVED_TRIPS.length})</button>
           <button className="nav-link">Bookings</button>
         </nav>
         <button className="btn btn-ghost" style={{ padding: "8px 14px", fontSize: 13 }}>
@@ -153,7 +150,7 @@ function App() {
             onInspect={setInspect}
           />
         )}
-        {view === "saved" && <SavedTrips trips={window.SAVED_TRIPS} onOpen={() => setView("plan")} />}
+        {view === "saved" && <SavedTrips trips={SAVED_TRIPS} onOpen={() => setView("plan")} />}
       </main>
 
       <footer className="footer">
@@ -178,5 +175,3 @@ function App() {
     </div>
   );
 }
-
-Object.assign(window, { App });
