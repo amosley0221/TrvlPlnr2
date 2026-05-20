@@ -65,7 +65,11 @@ app.post("/api/plan-trip", async (req, res) => {
         {
           type: "text",
           text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" },
+          // 1-hour cache TTL (vs the 5-min default). Write costs 2x instead
+          // of 1.25x, but cache_read at 0.1x kicks in for any second request
+          // within the hour — strictly better for this app's "plan a few
+          // trips in a session" usage pattern.
+          cache_control: { type: "ephemeral", ttl: "1h" },
         },
       ],
       messages: [{ role: "user", content: userMessage }],
