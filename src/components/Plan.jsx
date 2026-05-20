@@ -217,6 +217,7 @@ export function TripPlanModal({
   alreadyArchived,
 }) {
   const [selection, setSelection] = useState(() => initialSelection(trip));
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Reset selection back to the trip's default whenever a different trip
   // opens. (We don't reset on every render — the user's in-progress picks
@@ -240,7 +241,6 @@ export function TripPlanModal({
   const handleSave = () => onSave && onSave(effective);
   const handleArchive = () => onArchive && onArchive(effective);
 
-  const [pdfLoading, setPdfLoading] = useState(false);
   const handleExport = async () => {
     if (pdfLoading) return;
     setPdfLoading(true);
