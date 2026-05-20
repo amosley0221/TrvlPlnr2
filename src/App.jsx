@@ -44,6 +44,7 @@ function tripToSaved(trip, { archived = false } = {}) {
     priceNow: trip.total,
     nights: trip.nights,
     travelers: trip.travelers,
+    summary: trip.summary || null,
     archived,
   };
 }
@@ -313,8 +314,8 @@ export default function App() {
           <button className={"nav-link " + (view === "bookings" ? "active" : "")} onClick={() => setView("bookings")}>Bookings{bookings.filter(b => !b.cancelled).length ? ` (${bookings.filter(b => !b.cancelled).length})` : ""}</button>
         </nav>
         <button className="btn btn-ghost" style={{ padding: "8px 14px", fontSize: 13 }}>
-          <span style={{ width: 22, height: 22, borderRadius: 99, background: "var(--coral)", color: "white", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 800 }}>M</span>
-          Maya
+          <span style={{ width: 22, height: 22, borderRadius: 99, background: "var(--coral)", color: "white", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 800 }}>A</span>
+          Antonio
         </button>
       </header>
 

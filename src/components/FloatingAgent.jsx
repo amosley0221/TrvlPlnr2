@@ -33,15 +33,26 @@ export function FloatingAgent({ mood, hidden }) {
   const seeded = useRef(false);
   const [overInteractive, setOverInteractive] = useState(false);
   const [ready, setReady] = useState(false);
+  const [touchMode, setTouchMode] = useState(false);
 
-  // NOTE: every hook (useRef / useState / useEffect) must be called on every
-  // render — never early-return *before* the hooks below or React will throw
-  // "Rendered fewer hooks than expected" (Minified React error #300).
-  // Hide the agent by guarding inside the effects + skipping the JSX at the
-  // bottom, not by returning early.
+  // Detect touch / coarse-pointer devices and react to changes
+  // (e.g. iPad attaching a mouse). All hooks run on every render to
+  // satisfy Rules of Hooks; behavior gates inside the effects.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mql = window.matchMedia("(hover: none), (pointer: coarse)");
+    setTouchMode(mql.matches);
+    const onChange = () => setTouchMode(mql.matches);
+    if (mql.addEventListener) {
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    }
+    mql.addListener(onChange);
+    return () => mql.removeListener(onChange);
+  }, []);
 
   useEffect(() => {
-    if (hidden) return undefined;
+    if (hidden || touchMode) return undefined;
 
     const seed = () => {
       target.current = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.35 };
@@ -70,14 +81,11 @@ export function FloatingAgent({ mood, hidden }) {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
-  }, [ready, hidden]);
+  }, [ready, hidden, touchMode]);
 
   useEffect(() => {
-    if (hidden) return undefined;
+    if (hidden || touchMode) return undefined;
 
-    // Freeze the chase when the agent is thinking (it stays where it was at submit
-    // time and plays the thinking animation in place) or when the cursor sits over
-    // an interactive element (it stops to look confused).
     const moving = mood !== "thinking" && !overInteractive;
     let raf;
     const tick = () => {
@@ -92,12 +100,24 @@ export function FloatingAgent({ mood, hidden }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [mood, overInteractive, hidden]);
+  }, [mood, overInteractive, hidden, touchMode]);
 
   if (hidden) return null;
 
-  // Thinking takes priority over confused so a submitted prompt always
-  // animates correctly even if the cursor rests on a button.
+  // Touch / iPad / mobile: anchor in the bottom-right, no cursor chase. The
+  // mood still drives the agent's face — thinking spinner, happy smile, etc.
+  if (touchMode) {
+    return (
+      <div className="floating-agent floating-agent-static" aria-hidden="true">
+        <div className="floating-agent-inner-static">
+          <Agent mood={mood} />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop chase mode — thinking takes priority over confused so a submitted
+  // prompt always animates correctly even if the cursor rests on a button.
   let effectiveMood = mood;
   if (mood !== "thinking" && overInteractive) effectiveMood = "confused";
 

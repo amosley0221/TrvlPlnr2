@@ -300,6 +300,13 @@ export function TripPlanModal({
           </div>
         </div>
 
+        {effective.summary && (
+          <div className="trip-summary">
+            <span className="trip-summary-tag">From your agent</span>
+            <p>{effective.summary}</p>
+          </div>
+        )}
+
         {opts ? (
           <>
             <PopupSection
@@ -530,9 +537,6 @@ function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
                 style={locked ? { background: "var(--lime)" } : {}}>
                 {locked ? "🔒 Locked" : "🔓 Lock this"}
               </button>
-              {(ev.icon === "flight" || ev.icon === "hotel") && (
-                <button className="inspect-btn" onClick={() => onInspect(ev.icon)}>{"{}"} raw json</button>
-              )}
             </div>
           )}
         </div>

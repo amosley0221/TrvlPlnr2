@@ -230,3 +230,45 @@ html { scrollbar-color: var(--coral) var(--paper); scrollbar-width: auto; }
 ::-webkit-scrollbar-thumb:hover { background: var(--tangerine); }
 ::-webkit-scrollbar-thumb:active { background: var(--grape); }
 ::-webkit-scrollbar-corner { background: var(--paper); }
+
+/* ============ MOBILE / NARROW VIEWPORT ============ */
+@media (max-width: 640px) {
+  /* Nav was cramming "Plan a trip" / "Saved trips (4)" onto 3 lines each
+     because flex was letting the labels wrap. Keep them one-line and let
+     the row scroll horizontally if it has to. */
+  .nav {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .nav-links {
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .nav-link {
+    white-space: nowrap;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .brand { font-size: 18px; gap: 8px; }
+  .brand-mark { width: 28px; height: 28px; }
+
+  /* Hero text was being walked on by the decorative floaty shapes. Shrink
+     them and tuck them into the corners so they don't sit over headlines. */
+  .floaty { transform: scale(0.55) rotate(var(--r, 0)); transform-origin: center; }
+  .floaty.s1 { left: 1%; top: 4%; }
+  .floaty.s2 { right: 1%; top: 2%; }
+  .floaty.s3 { display: none; }
+  .floaty.s4 { right: 1%; bottom: -4px; }
+
+  /* Big display headline shouldn't overflow on narrow screens. */
+  .hero h1 { font-size: clamp(36px, 9vw, 56px); }
+
+  /* Footer stacks on small screens. */
+  .footer {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+    padding: 12px 16px;
+  }
+}

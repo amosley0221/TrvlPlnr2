@@ -61,6 +61,9 @@ function Card({ t, onOpen, onRemove, onArchive, onUnarchive, archived }) {
             : "⚠️ Up " + Math.abs(pctChange).toFixed(0) + "% since you saved. Lock soon?"}
         </div>
       )}
+      {t.summary && (
+        <p className="saved-card-summary">{t.summary}</p>
+      )}
     </div>
   );
 }

@@ -11,6 +11,11 @@ import {
   Text,
   StyleSheet,
   Link,
+  Svg,
+  Circle,
+  Path,
+  Rect,
+  G,
 } from "@react-pdf/renderer";
 
 // NOTE: deliberately not registering Fraunces / Inter from Google Fonts.
@@ -257,6 +262,37 @@ const s = StyleSheet.create({
     fontSize: 9,
   },
 
+  // Agent summary card
+  summaryCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    backgroundColor: C.paper,
+    border: `2pt solid ${C.ink}`,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+  },
+  summaryAvatar: {
+    width: 52,
+    paddingTop: 4,
+  },
+  summaryBody: { flex: 1 },
+  summaryTag: {
+    fontFamily: SANS,
+    fontSize: 8,
+    fontWeight: 700,
+    color: C.coral,
+    letterSpacing: 1.2,
+    marginBottom: 4,
+  },
+  summaryText: {
+    fontFamily: SERIF,
+    fontSize: 11,
+    lineHeight: 1.45,
+    color: C.ink,
+  },
+
   // Disclaimer + footer
   disclaimer: {
     marginTop: 14,
@@ -283,6 +319,39 @@ const s = StyleSheet.create({
 });
 
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
+
+// A small inline SVG render of the agent character — coral round head, white
+// cheeks, ink eyes, smile, antenna. Rendered via react-pdf's Svg primitives,
+// no network fetch needed.
+function AgentAvatar({ size = 64 }) {
+  return (
+    <Svg viewBox="0 0 100 100" style={{ width: size, height: size }}>
+      <G>
+        {/* antenna */}
+        <Rect x="48" y="6" width="4" height="14" fill={C.ink} />
+        <Circle cx="50" cy="6" r="5" fill={C.lime} stroke={C.ink} strokeWidth="2" />
+        {/* head */}
+        <Circle cx="50" cy="56" r="32" fill={C.coral} stroke={C.ink} strokeWidth="3" />
+        {/* cheeks */}
+        <Circle cx="34" cy="66" r="5" fill="#ffb7c5" />
+        <Circle cx="66" cy="66" r="5" fill="#ffb7c5" />
+        {/* eyes */}
+        <Circle cx="40" cy="54" r="4" fill={C.ink} />
+        <Circle cx="60" cy="54" r="4" fill={C.ink} />
+        <Circle cx="42" cy="52" r="1.5" fill="#fff" />
+        <Circle cx="62" cy="52" r="1.5" fill="#fff" />
+        {/* smile */}
+        <Path
+          d="M 38 70 Q 50 80 62 70"
+          stroke={C.ink}
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+        />
+      </G>
+    </Svg>
+  );
+}
 
 // Map the option's color hex from the existing var(--name) breakdown to a
 // flat color (PDF can't read CSS vars).
@@ -338,9 +407,14 @@ export function TripPDF({ trip }) {
       subject="AI-generated trip itinerary"
     >
       <Page size="LETTER" style={s.page}>
-        {/* Brand strip */}
+        {/* Brand strip with agent avatar */}
         <View style={s.brandStrip}>
-          <Text style={s.brand}>TrvlPlnr</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ marginRight: 8 }}>
+              <AgentAvatar size={36} />
+            </View>
+            <Text style={s.brand}>TrvlPlnr</Text>
+          </View>
           <Text style={s.brandTag}>your AI travel concierge</Text>
         </View>
 
@@ -368,6 +442,19 @@ export function TripPDF({ trip }) {
             </Text>
           </View>
         </View>
+
+        {/* From your agent — narrative summary */}
+        {trip.summary ? (
+          <View style={s.summaryCard} wrap={false}>
+            <View style={s.summaryAvatar}>
+              <AgentAvatar size={48} />
+            </View>
+            <View style={s.summaryBody}>
+              <Text style={s.summaryTag}>FROM YOUR AGENT</Text>
+              <Text style={s.summaryText}>{trip.summary}</Text>
+            </View>
+          </View>
+        ) : null}
 
         {/* Where the money goes */}
         {breakdown.length > 0 && (

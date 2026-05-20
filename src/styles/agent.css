@@ -521,10 +521,25 @@
 }
 .floating-agent-inner .agent-stage { margin: 0; }
 
-/* Hide the chase entirely on touch / reduced-motion. */
-@media (hover: none), (pointer: coarse) {
-  .floating-agent { display: none !important; }
+/* Touch / mobile / iPad: the agent still renders, but anchored bottom-right
+   with no cursor-chasing logic. Component detects touch via matchMedia and
+   swaps to .floating-agent-static. Faces and animations (thinking spinner,
+   happy smile, etc.) keep playing in place. */
+.floating-agent-static {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  top: auto; left: auto;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 1;
 }
+.floating-agent-inner-static {
+  transform: scale(0.42);
+  transform-origin: bottom right;
+}
+.floating-agent-static .agent-stage { margin: 0; }
+
 @media (prefers-reduced-motion: reduce) {
   .floating-agent { display: none !important; }
 }

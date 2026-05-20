@@ -280,6 +280,16 @@
 .saved-card.mint  .hero-strip { background: var(--mint); }
 .saved-card h3 { font-size: 22px; margin-bottom: 2px; }
 .saved-card .where { color: var(--ink-2); font-size: 13px; }
+.saved-card-summary {
+  margin: 10px 0 0;
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  border-top: 1.5px dashed var(--line);
+  padding-top: 8px;
+}
 .saved-card .price-row {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--ink);
@@ -410,6 +420,39 @@
 }
 .popup-total .per {
   font-size: 12px; color: var(--ink-2);
+}
+
+.trip-summary {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 0 0 14px;
+  box-shadow: var(--shadow-hard-sm);
+  position: relative;
+}
+.trip-summary-tag {
+  display: inline-block;
+  background: var(--coral);
+  color: white;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  margin-bottom: 8px;
+  transform: rotate(-2deg);
+}
+.trip-summary p {
+  margin: 0;
+  font-family: "Fraunces", serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-style: italic;
 }
 
 .popup-section {
@@ -655,20 +698,45 @@
 }
 
 @media (max-width: 600px) {
+  .trip-popup-scroller { padding: 20px 16px 18px; }
   .popup-hero {
     grid-template-columns: auto 1fr;
+    gap: 12px;
+    padding-bottom: 14px;
+  }
+  .popup-hero-emoji {
+    width: 64px; height: 64px; font-size: 36px;
   }
   .popup-total {
     grid-column: 1 / -1; text-align: left;
     padding-top: 8px; border-top: 1.5px dashed var(--line);
   }
+  .popup-total .num { font-size: 26px; }
+
   .popup-link-row {
-    grid-template-columns: 40px 1fr auto;
+    grid-template-columns: 36px 1fr auto;
+    gap: 8px;
+    padding: 10px;
   }
   .popup-link-row[role="radio"] {
     grid-template-columns: 22px 36px 1fr auto;
   }
+  .popup-link-icon { width: 36px; height: 36px; font-size: 18px; }
+  .popup-link-title { font-size: 13px; max-width: none; white-space: normal; }
+  .popup-link-meta { font-size: 11px; }
+  .popup-link-cost {
+    font-size: 13px;
+    text-align: right;
+    white-space: nowrap;
+  }
   .popup-link-cta { display: none; }
+  .popup-section-head h4 { font-size: 16px; }
+
+  .popup-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .popup-actions .btn { width: 100%; }
 }
 
 /* ============ BOOKINGS SUMMARY (PlanView side panel) ============ */
