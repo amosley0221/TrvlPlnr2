@@ -98,10 +98,9 @@ const s = StyleSheet.create({
     backgroundColor: C.sunshine,
     border: `1.5pt solid ${C.ink}`,
     borderRadius: 14,
-    fontSize: 32,
-    textAlign: "center",
-    lineHeight: 1.6,
     marginRight: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroBody: { flex: 1 },
   eyebrow: {
@@ -174,10 +173,9 @@ const s = StyleSheet.create({
     backgroundColor: C.sky,
     border: `1pt solid ${C.ink}`,
     borderRadius: 6,
-    textAlign: "center",
-    lineHeight: 1.8,
-    fontSize: 14,
     marginRight: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   rowBody: { flex: 1 },
   rowTitle: { fontSize: 10, fontWeight: 700 },
@@ -240,7 +238,7 @@ const s = StyleSheet.create({
     color: C.ink2,
     fontWeight: 700,
   },
-  eventEmoji: { width: 18, fontSize: 12 },
+  eventEmoji: { width: 18, alignItems: "flex-start", paddingTop: 1 },
   eventBody: { flex: 1, paddingRight: 8 },
   eventTitle: { fontSize: 10, fontWeight: 700 },
   eventMeta: { fontSize: 8, color: C.ink2 },
@@ -320,6 +318,109 @@ const s = StyleSheet.create({
 
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
 
+// react-pdf's built-in Helvetica/Times fonts have no emoji glyphs, so emoji
+// characters in Text nodes rendered as garbage (random "<", "=", ">"). All
+// PDF icons go through PDFIcon, which draws a tiny SVG glyph per kind.
+function PDFIcon({ kind, size = 14, color = C.ink }) {
+  const sw = size / 16;
+  const stroke = { stroke: color, strokeWidth: 1.4 * sw, fill: "none", strokeLinecap: "round", strokeLinejoin: "round" };
+  const fill = { fill: color };
+  switch (kind) {
+    case "flight":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M2 14 L22 8 L20 14 L9 17 L7 20 L5 19 L6 16 L2 14 Z" {...fill} />
+        </Svg>
+      );
+    case "hotel":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M3 20 V8 H21 V20" {...stroke} />
+          <Path d="M3 14 H21" {...stroke} />
+          <Path d="M7 14 V11 H11 V14" {...stroke} />
+          <Path d="M13 14 V11 H17 V14" {...stroke} />
+        </Svg>
+      );
+    case "house":
+    case "airbnb":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M3 11 L12 3 L21 11 V20 H14 V14 H10 V20 H3 Z" {...stroke} />
+        </Svg>
+      );
+    case "car":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M4 16 V12 L6 8 H18 L20 12 V16 H4 Z" {...stroke} />
+          <Circle cx="8" cy="17" r="1.6" {...fill} />
+          <Circle cx="16" cy="17" r="1.6" {...fill} />
+        </Svg>
+      );
+    case "train":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M6 4 H18 V16 H6 Z" {...stroke} />
+          <Path d="M6 10 H18" {...stroke} />
+          <Path d="M8 19 L6 21" {...stroke} />
+          <Path d="M16 19 L18 21" {...stroke} />
+        </Svg>
+      );
+    case "bus":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M5 4 H19 V18 H5 Z" {...stroke} />
+          <Path d="M5 11 H19" {...stroke} />
+          <Path d="M6 21 L8 18" {...stroke} />
+          <Path d="M18 21 L16 18" {...stroke} />
+        </Svg>
+      );
+    case "food":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M6 3 V11 M9 3 V11 M6 11 H9 V21 H6 Z" {...stroke} />
+          <Path d="M18 3 C15 3 14 8 14 11 H18 V21" {...stroke} />
+        </Svg>
+      );
+    case "fun":
+    case "ticket":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Path d="M3 9 V6 H21 V9 A2 2 0 0 0 21 13 V18 H3 V13 A2 2 0 0 0 3 9 Z" {...stroke} />
+          <Path d="M10 6 V18" stroke={color} strokeWidth={1.2 * sw} strokeDasharray="1 2" fill="none" />
+        </Svg>
+      );
+    case "money":
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Circle cx="12" cy="12" r="9" {...stroke} />
+          <Path d="M12 7 V17 M15 9 H10 A2 2 0 0 0 10 13 H14 A2 2 0 0 1 14 17 H9" {...stroke} />
+        </Svg>
+      );
+    case "globe":
+    default:
+      return (
+        <Svg viewBox="0 0 24 24" style={{ width: size, height: size }}>
+          <Circle cx="12" cy="12" r="9" {...stroke} />
+          <Path d="M3 12 H21 M12 3 C15 7 15 17 12 21 C9 17 9 7 12 3 Z" {...stroke} />
+        </Svg>
+      );
+  }
+}
+
+// Map a free-form emoji (or trip "color"/event "icon" enum) to a PDFIcon kind.
+function iconKindForEvent(ev) {
+  if (ev?.icon) return ev.icon;
+  return "globe";
+}
+function iconKindForBreakdownKey(key) {
+  if (key === "flights") return "flight";
+  if (key === "stay") return "hotel";
+  if (key === "car") return "car";
+  if (key === "food") return "food";
+  if (key === "fun") return "fun";
+  return "globe";
+}
+
 // A small inline SVG render of the agent character — coral round head, white
 // cheeks, ink eyes, smile, antenna. Rendered via react-pdf's Svg primitives,
 // no network fetch needed.
@@ -366,12 +467,12 @@ const VAR_MAP = {
   "var(--bubblegum)": C.bubblegum,
 };
 
-function BookedRow({ emoji, iconColor, title, meta, price, host }) {
+function BookedRow({ kind, iconColor, title, meta, price, host }) {
   return (
     <View style={s.row}>
-      <Text style={[s.rowIcon, { backgroundColor: iconColor || C.sky }]}>
-        {emoji}
-      </Text>
+      <View style={[s.rowIcon, { backgroundColor: iconColor || C.sky }]}>
+        <PDFIcon kind={kind} size={14} color={C.ink} />
+      </View>
       <View style={s.rowBody}>
         <Text style={s.rowTitle}>{title}</Text>
         {meta ? <Text style={s.rowMeta}>{meta}</Text> : null}
@@ -420,7 +521,9 @@ export function TripPDF({ trip }) {
 
         {/* Hero card */}
         <View style={s.hero}>
-          <Text style={s.heroEmoji}>{trip.hero || "✈️"}</Text>
+          <View style={s.heroEmoji}>
+            <PDFIcon kind="globe" size={32} color={C.ink} />
+          </View>
           <View style={s.heroBody}>
             <Text style={s.eyebrow}>your plan</Text>
             <Text style={s.heroTitle}>
@@ -478,9 +581,10 @@ export function TripPDF({ trip }) {
             </View>
             {breakdown.map((b) => (
               <View key={b.key} style={s.breakdownRow}>
-                <Text>
-                  {b.emoji} {b.label}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <PDFIcon kind={iconKindForBreakdownKey(b.key)} size={11} color={C.ink} />
+                  <Text>{b.label}</Text>
+                </View>
                 <Text>{fmtMoney(b.val)}</Text>
               </View>
             ))}
@@ -496,7 +600,7 @@ export function TripPDF({ trip }) {
             </View>
             {flight && (
               <BookedRow
-                emoji={flight.emoji || "✈️"}
+                kind="flight"
                 iconColor={C.sky}
                 title={`${flight.airline} · ${flight.flight}`}
                 meta={`${flight.route} · ${flight.meta}`}
@@ -506,7 +610,7 @@ export function TripPDF({ trip }) {
             )}
             {stay && (
               <BookedRow
-                emoji={stay.emoji || "🏨"}
+                kind={(stay.type || "").toLowerCase() === "airbnb" ? "house" : "hotel"}
                 iconColor={C.bubblegum}
                 title={stay.name}
                 meta={`${stay.type} · ${stay.meta}`}
@@ -516,7 +620,7 @@ export function TripPDF({ trip }) {
             )}
             {transport && (
               <BookedRow
-                emoji="🚗"
+                kind="car"
                 iconColor={C.tangerine}
                 title={transport.name}
                 meta={transport.meta}
@@ -551,7 +655,9 @@ export function TripPDF({ trip }) {
                     style={[s.event, j === 0 ? s.eventFirst : null]}
                   >
                     <Text style={s.eventTime}>{ev.time}</Text>
-                    <Text style={s.eventEmoji}>{ev.emoji}</Text>
+                    <View style={s.eventEmoji}>
+                      <PDFIcon kind={iconKindForEvent(ev)} size={12} color={C.ink} />
+                    </View>
                     <View style={s.eventBody}>
                       <Text style={s.eventTitle}>{ev.title}</Text>
                       <Text style={s.eventMeta}>

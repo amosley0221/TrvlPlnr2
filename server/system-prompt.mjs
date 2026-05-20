@@ -42,7 +42,7 @@ Four arrays of real, bookable alternatives the user can choose from.
 Real airlines that actually serve the route. Mix carriers — show at least one premium, one mainline, one low-cost. Each entry:
 - "airline": carrier name ("Delta", "TAP Air Portugal", "ANA").
 - "flight": flight code, e.g. "DL 264", "TP 218", "WN 1432". Plausible flight numbers; do not invent suspiciously precise ones.
-- "route": "ORIGIN -> DEST" or "ORIGIN -> HUB -> DEST" if 1-stop. Use real IATA codes.
+- "route": "ORIGIN -> DEST" or "ORIGIN -> HUB -> DEST" if 1-stop. Use real IATA airport codes — NOT FAA LIDs. When the IATA code differs from the FAA code, always use the IATA code. Common cases: Concord-Padgett Regional (NC) is **USA** (not JQF); Spring Mountain Ranch / Tonopah area is TPH not TPH-FAA; Punta Gorda FL is PGD not PGD-FAA. If you only know the FAA code for a small regional field, prefer naming the nearest IATA airport instead.
 - "meta": short descriptor, e.g. "Nonstop · 7h 10m · main cabin", "1 stop in DEN · 5h 40m".
 - "price": realistic round-trip price per traveler for the route/cabin.
 - "host": the carrier's actual booking domain (see VENDOR REFERENCE below).
@@ -117,6 +117,12 @@ Event meta: short descriptor.
 Event cost: integer USD (0 for free things like returning a rental).
 Event vendor: carrier/property/restaurant name when applicable (matches a row in bookingOptions where possible).
 Event was: optional, "was this much before deal" original price.
+
+## Round-trip handling (REQUIRED for any trip that includes a flight)
+If the trip includes a flight (i.e. "bookingOptions.flights" has a flight or train/bus entry — anything not "Drive yourself"), you MUST include TWO flight/transit events:
+- An OUTBOUND event on day 1 (or whenever the user actually leaves home) with route "ORIGIN → DEST".
+- A RETURN event on the LAST day with route REVERSED — "DEST → ORIGIN" — and an appropriate later time (e.g. 17:00–20:00). The return event MUST land back at the user's home origin, never at the destination airport.
+The two events together describe the round-trip. Do NOT include only an outbound leg, and do NOT put the destination as the arrival city on the return — the user is coming home. Same airline and similar duration is fine; flight number can differ. If the trip is a drive (no flight), skip both — just a single drive event each way is enough.
 
 # HOME LOCATION & TRAVEL MODE
 If the constraints include a "home US ZIP code", use it to figure out the right way to get to the destination — don't just default to flying.

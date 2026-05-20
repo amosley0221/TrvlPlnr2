@@ -530,11 +530,19 @@
   bottom: 14px;
   right: 14px;
   top: auto; left: auto;
+  width: 0; height: 0;
   z-index: 60;
   pointer-events: none;
   opacity: 1;
+  transition: none;
 }
+/* Anchor the (220×220) agent stage to the parent's bottom-right corner
+   (which itself sits 14px from the viewport edge), then scale toward that
+   same corner so the shrunken agent stays pinned to the bottom-right. */
 .floating-agent-inner-static {
+  position: absolute;
+  right: 0;
+  bottom: 0;
   transform: scale(0.42);
   transform-origin: bottom right;
 }
