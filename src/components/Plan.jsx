@@ -7,6 +7,7 @@ import {
 import { DUFFEL_OFFER, BOOKING_HOTEL } from "../data/api.js";
 import { jsonHighlight } from "./Pipeline.jsx";
 import { exportTripAsPDF } from "../lib/export-pdf.js";
+import { buildBookingUrl } from "../lib/booking-links.js";
 
 export function NoMatchModal({ open, prompt, destinations, onClose, onPick }) {
   if (!open) return null;
@@ -101,7 +102,7 @@ export function extractBookingLinks(trip) {
   return links;
 }
 
-function OptionRow({ opt, category, defaultEmoji, isSelected, isStatic, onSelect }) {
+function OptionRow({ opt, category, defaultEmoji, isSelected, isStatic, onSelect, trip }) {
   const title =
     opt.name || (opt.airline ? opt.airline + " · " + opt.flight : opt.flight);
   const sub = opt.airline && opt.route ? opt.route : opt.type || opt.airline || "";
@@ -154,7 +155,7 @@ function OptionRow({ opt, category, defaultEmoji, isSelected, isStatic, onSelect
         {opt.price === 0 ? "free" : fmtMoney(opt.price)}
       </div>
       <a
-        href={opt.host ? "https://" + opt.host : "#"}
+        href={buildBookingUrl(opt, trip)}
         target="_blank"
         rel="noopener noreferrer"
         className="popup-link-cta"
@@ -176,6 +177,7 @@ function PopupSection({
   selectionKey,
   selectedIndex,
   onPick,
+  trip,
 }) {
   if (!items || !items.length) return null;
   const isStatic = !selectionKey;
@@ -197,6 +199,7 @@ function PopupSection({
             isStatic={isStatic}
             isSelected={!isStatic && selectedIndex === i}
             onSelect={isStatic ? undefined : () => onPick(selectionKey, i)}
+            trip={trip}
           />
         ))}
       </div>
@@ -289,6 +292,7 @@ export function TripPlanModal({
               selectionKey="flights"
               selectedIndex={selection?.flights}
               onPick={pick}
+              trip={effective}
             />
             <PopupSection
               icon="🏨"
@@ -300,6 +304,7 @@ export function TripPlanModal({
               selectionKey="stays"
               selectedIndex={selection?.stays}
               onPick={pick}
+              trip={effective}
             />
             <PopupSection
               icon="🚗"
@@ -311,6 +316,7 @@ export function TripPlanModal({
               selectionKey="transport"
               selectedIndex={selection?.transport}
               onPick={pick}
+              trip={effective}
             />
             <PopupSection
               icon="🎟️"
@@ -319,6 +325,7 @@ export function TripPlanModal({
               items={opts.extras}
               category="fun"
               defaultEmoji="🎟️"
+              trip={effective}
             />
           </>
         ) : (
@@ -576,7 +583,7 @@ function swapRowSub(kind, o) {
   return "";
 }
 
-export function SwapModal({ kind, options, selectedIndex, onClose, onChoose }) {
+export function SwapModal({ kind, options, selectedIndex, onClose, onChoose, trip }) {
   const [sel, setSel] = useState(selectedIndex ?? 0);
 
   useEffect(() => {
@@ -643,7 +650,7 @@ export function SwapModal({ kind, options, selectedIndex, onClose, onChoose }) {
                   {o.price === 0 ? "free" : fmtMoney(o.price)}
                 </div>
                 <a
-                  href={o.host ? "https://" + o.host : "#"}
+                  href={buildBookingUrl(o, trip)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="popup-link-cta"
@@ -717,6 +724,7 @@ export function BookingsSummary({ trip, onOpenSwap }) {
         meta={`${flight.route} · ${flight.meta}`}
         price={fmtMoney(flight.price) + " / pax"}
         host={flight.host}
+        bookingUrl={buildBookingUrl(flight, trip)}
         onSeeMore={() => onOpenSwap("flights")}
       />
       <BookedRow
@@ -725,6 +733,7 @@ export function BookingsSummary({ trip, onOpenSwap }) {
         meta={`${stay.type} · ${stay.meta}`}
         price={fmtMoney(stay.price)}
         host={stay.host}
+        bookingUrl={buildBookingUrl(stay, trip)}
         onSeeMore={() => onOpenSwap("stays")}
       />
       <BookedRow
@@ -733,6 +742,7 @@ export function BookingsSummary({ trip, onOpenSwap }) {
         meta={transport.meta}
         price={transport.price === 0 ? "free" : fmtMoney(transport.price)}
         host={transport.host}
+        bookingUrl={buildBookingUrl(transport, trip)}
         onSeeMore={() => onOpenSwap("transport")}
       />
 
@@ -748,7 +758,7 @@ export function BookingsSummary({ trip, onOpenSwap }) {
   );
 }
 
-function BookedRow({ emoji, title, meta, price, host, onSeeMore }) {
+function BookedRow({ emoji, title, meta, price, host, bookingUrl, onSeeMore }) {
   return (
     <div className="booked-row">
       <span className="booked-emoji">{emoji}</span>
@@ -758,7 +768,7 @@ function BookedRow({ emoji, title, meta, price, host, onSeeMore }) {
         <div className="booked-actions">
           <a
             className="booked-link"
-            href={host ? "https://" + host : "#"}
+            href={bookingUrl || (host ? "https://" + host : "#")}
             target="_blank"
             rel="noopener noreferrer"
           >

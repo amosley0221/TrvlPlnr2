@@ -331,7 +331,28 @@
   overflow-y: auto;
   position: relative;
   padding: 28px 28px 24px;
+  /* Override the chunky site-wide coral scrollbar inside the popup —
+     it visually extends past the rounded corners and looks broken. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-2) transparent;
 }
+.trip-popup::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.trip-popup::-webkit-scrollbar-track {
+  background: transparent;
+  border-left: 0;
+}
+.trip-popup::-webkit-scrollbar-thumb {
+  background: var(--ink-2);
+  border: 2px solid var(--paper);
+  border-radius: 999px;
+  background-clip: padding-box;
+  box-shadow: none;
+}
+.trip-popup::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+.trip-popup::-webkit-scrollbar-thumb:active { background: var(--ink); }
 .popup-close {
   position: absolute; top: 14px; right: 14px;
   width: 36px; height: 36px; border-radius: 50%;

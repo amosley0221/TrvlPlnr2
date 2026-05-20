@@ -77,6 +77,8 @@ export async function searchOffers({
 }
 
 // Map a Duffel offer to the bookingOptions.flights row shape the UI expects.
+// Returns null for offers we want to drop entirely (e.g. Duffel's fake test
+// carrier "Duffel Airways" / IATA "ZZ" that shows up in sandbox results).
 export function duffelOfferToFlight(offer, { isBest = false, tag } = {}) {
   const slice = offer?.slices?.[0];
   const segments = slice?.segments || [];
@@ -84,6 +86,20 @@ export function duffelOfferToFlight(offer, { isBest = false, tag } = {}) {
 
   const seg0 = segments[0];
   const airline = offer.owner?.name || seg0.marketing_carrier?.name || "Airline";
+
+  // Drop Duffel's sandbox test airline — it's not a real carrier and links
+  // back to duffel.com instead of a bookable site. When the user upgrades
+  // to a live key these never appear, but the filter is cheap insurance.
+  const ownerCode = (offer.owner?.iata_code || "").toUpperCase();
+  const segCode = (seg0.marketing_carrier?.iata_code || "").toUpperCase();
+  if (
+    ownerCode === "ZZ" ||
+    segCode === "ZZ" ||
+    /duffel\s*airways/i.test(airline)
+  ) {
+    return null;
+  }
+
   const carrierCode = seg0.marketing_carrier?.iata_code || "";
   const flightNum = seg0.marketing_carrier_flight_number || "";
   const flightLabel = (carrierCode + " " + flightNum).trim() || airline;

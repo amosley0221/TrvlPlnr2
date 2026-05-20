@@ -384,6 +384,7 @@ export default function App() {
         kind={swap?.kind}
         options={swap?.kind ? trip?.bookingOptions?.[swap.kind] : null}
         selectedIndex={swap?.kind ? trip?.selection?.[swap.kind] : 0}
+        trip={trip}
         onClose={() => setSwap(null)}
         onChoose={applySwap}
       />
