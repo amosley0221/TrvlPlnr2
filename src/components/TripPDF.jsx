@@ -211,8 +211,10 @@ const s = StyleSheet.create({
   },
   dayNum: {
     minWidth: 34,
-    height: 18,
-    paddingHorizontal: 6,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
     backgroundColor: C.coral,
     color: "#fff",
     borderRadius: 9,
@@ -220,8 +222,8 @@ const s = StyleSheet.create({
     fontSize: 9,
     fontWeight: 700,
     textAlign: "center",
-    lineHeight: 1.6,
-    marginRight: 6,
+    lineHeight: 1,
+    marginRight: 8,
     letterSpacing: 0.5,
   },
   dayTitleRow: { flexDirection: "row", alignItems: "center" },
@@ -319,6 +321,24 @@ const s = StyleSheet.create({
 });
 
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
+
+// Helvetica/Times-Bold (built-in PDF fonts) have no emoji glyphs, so any
+// emoji in free-form text (like the agent's summary) gets rendered as a
+// random substitute glyph — "<", "=", ">", etc. Strip them out before
+// handing the text to react-pdf.
+function stripEmoji(text) {
+  if (typeof text !== "string") return text;
+  return text
+    // Broad emoji + symbol ranges: BMP symbols, Misc Symbols & Pictographs,
+    // Emoticons, Transport & Map, Supplemental Symbols, Dingbats, plus
+    // variation selectors and zero-width joiners.
+    .replace(
+      /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{FE0F}\u{200D}]/gu,
+      "",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function dayBadgeFromLabel(label, idx) {
   if (typeof label === "string" && label.trim()) {
@@ -433,6 +453,40 @@ function iconKindForBreakdownKey(key) {
   return "globe";
 }
 
+// SVG render of the home-page .brand-mark — a rounded square with a conic
+// gradient ring (coral → tangerine → sunshine → mint → sky → grape) and a
+// paper-colored inner circle. PDF can't do conic gradients, so we draw the
+// ring as 6 pie wedges clipped to a disc — close enough to read as the
+// TrvlPlnr mark on the page.
+function BrandMark({ size = 36 }) {
+  const ringColors = [C.coral, C.tangerine, C.sunshine, C.mint, C.sky, C.grape];
+  const cx = 50, cy = 50, outerR = 46;
+  // Pie wedge i (of 6), starting at top and going clockwise.
+  const wedge = (i) => {
+    const a0 = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const a1 = ((i + 1) / 6) * Math.PI * 2 - Math.PI / 2;
+    const x0 = cx + Math.cos(a0) * outerR;
+    const y0 = cy + Math.sin(a0) * outerR;
+    const x1 = cx + Math.cos(a1) * outerR;
+    const y1 = cy + Math.sin(a1) * outerR;
+    return `M ${cx} ${cy} L ${x0} ${y0} A ${outerR} ${outerR} 0 0 1 ${x1} ${y1} Z`;
+  };
+  return (
+    <Svg viewBox="0 0 100 100" style={{ width: size, height: size }}>
+      {/* Outer ink ring */}
+      <Circle cx={cx} cy={cy} r={outerR} fill="none" stroke={C.ink} strokeWidth="4" />
+      <G>
+        {ringColors.map((c, i) => (
+          <Path key={i} d={wedge(i)} fill={c} />
+        ))}
+        {/* Paper-colored inner disc with its own ink ring, matching the
+            ::after pseudo-element from the CSS brand-mark. */}
+        <Circle cx={cx} cy={cy} r="22" fill={C.paper} stroke={C.ink} strokeWidth="3" />
+      </G>
+    </Svg>
+  );
+}
+
 // A small inline SVG render of the agent character — coral round head, white
 // cheeks, ink eyes, smile, antenna. Rendered via react-pdf's Svg primitives,
 // no network fetch needed.
@@ -520,11 +574,11 @@ export function TripPDF({ trip }) {
       subject="AI-generated trip itinerary"
     >
       <Page size="LETTER" style={s.page}>
-        {/* Brand strip with agent avatar */}
+        {/* Brand strip with TrvlPlnr logo (matches the home-page brand-mark) */}
         <View style={s.brandStrip}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View style={{ marginRight: 8 }}>
-              <AgentAvatar size={36} />
+            <View style={{ marginRight: 10 }}>
+              <BrandMark size={32} />
             </View>
             <Text style={s.brand}>TrvlPlnr</Text>
           </View>
@@ -566,7 +620,7 @@ export function TripPDF({ trip }) {
             </View>
             <View style={s.summaryBody}>
               <Text style={s.summaryTag}>FROM YOUR AGENT</Text>
-              <Text style={s.summaryText}>{trip.summary}</Text>
+              <Text style={s.summaryText}>{stripEmoji(trip.summary)}</Text>
             </View>
           </View>
         ) : null}
