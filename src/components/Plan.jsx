@@ -7,7 +7,7 @@ import {
 import { DUFFEL_OFFER, BOOKING_HOTEL } from "../data/api.js";
 import { jsonHighlight } from "./Pipeline.jsx";
 import { exportTripAsPDF } from "../lib/export-pdf.js";
-import { buildBookingUrl } from "../lib/booking-links.js";
+import { buildBookingUrl, buildMapsUrl } from "../lib/booking-links.js";
 
 // "Mon, Jun 18" → "MON". "Jun 18" → "18". Anything unparseable → "N" where N
 // is 1-based day index (matches the old numbered-bubble behavior).
@@ -118,6 +118,11 @@ function OptionRow({ opt, category, defaultEmoji, isSelected, isStatic, onSelect
   const title =
     opt.name || (opt.airline ? opt.airline + " · " + opt.flight : opt.flight);
   const sub = opt.airline && opt.route ? opt.route : opt.type || opt.airline || "";
+  // Only physical places get a Maps link — skip flights/transport.
+  const mapsUrl =
+    category === "stay" || category === "fun"
+      ? buildMapsUrl({ title: opt.name, vendor: opt.name }, trip)
+      : null;
   const onRowClick = () => {
     if (!isStatic && onSelect) onSelect();
   };
@@ -166,15 +171,29 @@ function OptionRow({ opt, category, defaultEmoji, isSelected, isStatic, onSelect
       <div className="popup-link-cost">
         {opt.price === 0 ? "free" : fmtMoney(opt.price)}
       </div>
-      <a
-        href={buildBookingUrl(opt, trip)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="popup-link-cta"
-        onClick={(e) => e.stopPropagation()}
-      >
-        Book on {opt.host} ↗
-      </a>
+      <div className="popup-link-ctas">
+        <a
+          href={buildBookingUrl(opt, trip)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="popup-link-cta"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Book on {opt.host} ↗
+        </a>
+        {mapsUrl && (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="popup-link-map"
+            onClick={(e) => e.stopPropagation()}
+            title="Open in Google Maps"
+          >
+            📍 Map
+          </a>
+        )}
+      </div>
     </div>
   );
 }
@@ -531,7 +550,11 @@ export function InspectModal({ kind, onClose }) {
   );
 }
 
-function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
+function EventRow({ ev, trip, onSwap, locked, onLock, onInspect }) {
+  const mapsUrl =
+    ev.icon === "food" || ev.icon === "fun" || ev.icon === "hotel"
+      ? buildMapsUrl(ev, trip)
+      : null;
   return (
     <div className="event">
       <div>
@@ -549,6 +572,18 @@ function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
                 style={locked ? { background: "var(--lime)" } : {}}>
                 {locked ? "🔒 Locked" : "🔓 Lock this"}
               </button>
+              {mapsUrl && (
+                <a className="refine-chip event-map-link" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                  📍 Map
+                </a>
+              )}
+            </div>
+          )}
+          {(ev.icon === "food" || ev.icon === "fun") && mapsUrl && (
+            <div style={{ marginTop: 6 }}>
+              <a className="event-map-link" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                📍 View on Google Maps
+              </a>
             </div>
           )}
         </div>
@@ -561,7 +596,7 @@ function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
   );
 }
 
-export function DayCard({ day, idx, onSwap, locks, toggleLock, onInspect }) {
+export function DayCard({ day, idx, trip, onSwap, locks, toggleLock, onInspect }) {
   const dayCost = day.events.reduce((s, e) => s + (e.cost || 0), 0);
   const badge = dayBadgeFromLabel(day.label, idx);
   return (
@@ -574,7 +609,7 @@ export function DayCard({ day, idx, onSwap, locks, toggleLock, onInspect }) {
         <div className="day-date">{day.label} · <strong>{fmtMoney(dayCost)}</strong></div>
       </div>
       {day.events.map((ev, i) => (
-        <EventRow key={i} ev={ev} onSwap={onSwap}
+        <EventRow key={i} ev={ev} trip={trip} onSwap={onSwap}
                locked={locks[day.label + "-" + i]}
                onLock={() => toggleLock(day.label + "-" + i)}
                onInspect={onInspect} />

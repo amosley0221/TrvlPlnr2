@@ -675,6 +675,30 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.popup-link-ctas {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  min-width: 0;
+}
+.popup-link-map {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px; font-weight: 700; color: var(--ink-2);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.popup-link-map:hover { color: var(--ink); }
+
+/* Day-by-day event map link */
+.event-map-link {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.event-map-link:hover { color: var(--coral); }
 
 .popup-disclaimer {
   background: var(--bg-2);

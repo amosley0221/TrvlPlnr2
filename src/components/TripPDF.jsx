@@ -17,6 +17,7 @@ import {
   Rect,
   G,
 } from "@react-pdf/renderer";
+import { buildMapsUrl } from "../lib/booking-links.js";
 
 // NOTE: deliberately not registering Fraunces / Inter from Google Fonts.
 // react-pdf fetches font files at render time (not at Font.register), and
@@ -247,6 +248,13 @@ const s = StyleSheet.create({
   eventTitle: { fontSize: 10, fontWeight: 700 },
   eventMeta: { fontSize: 8, color: C.ink2 },
   eventCost: { fontSize: 10, fontWeight: 700, marginLeft: 4 },
+  eventMapLink: {
+    fontSize: 8,
+    color: C.coral,
+    textDecoration: "none",
+    fontWeight: 700,
+    marginTop: 2,
+  },
 
   // Cost breakdown
   breakdown: {
@@ -715,27 +723,38 @@ export function TripPDF({ trip }) {
                   </View>
                   <Text style={s.dayLabel}>{day.label}</Text>
                 </View>
-                {day.events.map((ev, j) => (
-                  <View
-                    key={j}
-                    style={[s.event, j === 0 ? s.eventFirst : null]}
-                  >
-                    <Text style={s.eventTime}>{ev.time}</Text>
-                    <View style={s.eventEmoji}>
-                      <PDFIcon kind={iconKindForEvent(ev)} size={12} color={C.ink} />
-                    </View>
-                    <View style={s.eventBody}>
-                      <Text style={s.eventTitle}>{ev.title}</Text>
-                      <Text style={s.eventMeta}>
-                        {ev.meta}
-                        {ev.vendor ? ` · ${ev.vendor}` : ""}
+                {day.events.map((ev, j) => {
+                  const mapsUrl =
+                    ev.icon === "food" || ev.icon === "fun" || ev.icon === "hotel"
+                      ? buildMapsUrl(ev, trip)
+                      : null;
+                  return (
+                    <View
+                      key={j}
+                      style={[s.event, j === 0 ? s.eventFirst : null]}
+                    >
+                      <Text style={s.eventTime}>{ev.time}</Text>
+                      <View style={s.eventEmoji}>
+                        <PDFIcon kind={iconKindForEvent(ev)} size={12} color={C.ink} />
+                      </View>
+                      <View style={s.eventBody}>
+                        <Text style={s.eventTitle}>{ev.title}</Text>
+                        <Text style={s.eventMeta}>
+                          {ev.meta}
+                          {ev.vendor ? ` · ${ev.vendor}` : ""}
+                        </Text>
+                        {mapsUrl ? (
+                          <Link src={mapsUrl} style={s.eventMapLink}>
+                            View on Google Maps →
+                          </Link>
+                        ) : null}
+                      </View>
+                      <Text style={s.eventCost}>
+                        {ev.cost === 0 ? "free" : fmtMoney(ev.cost)}
                       </Text>
                     </View>
-                    <Text style={s.eventCost}>
-                      {ev.cost === 0 ? "free" : fmtMoney(ev.cost)}
-                    </Text>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             ))}
           </View>

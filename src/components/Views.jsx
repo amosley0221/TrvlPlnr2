@@ -87,7 +87,7 @@ export function PlanView({ trip, locks, toggleLock, onSwap, onSwapKind, refine, 
       <div className="plan-grid">
         <div className="timeline">
           {trip.days.map((d, i) => (
-            <DayCard key={i} idx={i} day={d} onSwap={onSwap} locks={locks} toggleLock={toggleLock} onInspect={onInspect} />
+            <DayCard key={i} idx={i} day={d} trip={trip} onSwap={onSwap} locks={locks} toggleLock={toggleLock} onInspect={onInspect} />
           ))}
         </div>
         <aside className="side">

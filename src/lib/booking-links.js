@@ -159,3 +159,50 @@ export function buildBookingUrl(opt, trip) {
   const sky = buildSkyscannerUrl(origin, dest, depart, ret, travelers);
   return sky || fallback;
 }
+
+// Build a Google Maps search URL for an itinerary event (restaurant,
+// attraction, hotel). Combines the place name (vendor preferred, otherwise
+// parsed from the title) with the trip's destination city for disambiguation.
+// Returns null if we can't extract a usable place name.
+export function buildMapsUrl(ev, trip) {
+  if (!ev) return null;
+  const place = mapsPlaceName(ev);
+  if (!place) return null;
+
+  // Drop "(IATA)" / "(via XYZ)" parens and any leading "via " from the
+  // destination — Google Maps does worse with airport codes than with the
+  // plain city name.
+  const dest = (trip?.destination || "")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\bvia\s+/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const query = dest && !place.toLowerCase().includes(dest.toLowerCase().split(",")[0].trim())
+    ? `${place}, ${dest}`
+    : place;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+// Pull the most specific real-world place name we can from an event.
+function mapsPlaceName(ev) {
+  // Vendor is usually the cleanest — Claude sets it to the actual venue.
+  if (ev.vendor && typeof ev.vendor === "string") {
+    const v = ev.vendor.trim();
+    // Skip web hosts and generic strings.
+    if (v && !/\.(com|net|org|io|co\.[a-z]+)$/i.test(v) && !/^https?:/i.test(v)) {
+      return v;
+    }
+  }
+  // Otherwise strip common itinerary prefixes from the title.
+  if (ev.title && typeof ev.title === "string") {
+    const stripped = ev.title
+      .trim()
+      .replace(/^(dinner|lunch|breakfast|brunch|drinks|cocktails|coffee)\s+(at|@)\s+/i, "")
+      .replace(/^(visit|tour|explore|see|check\s+out|stop\s+by|stroll\s+through)\s+/i, "")
+      .replace(/^(reservation\s+at|booking\s+at)\s+/i, "")
+      .trim();
+    if (stripped) return stripped;
+  }
+  return null;
+}
