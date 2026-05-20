@@ -67,10 +67,62 @@ function tripToBooking(trip) {
 
 const EMPTY_CONSTRAINTS = { home: null, travelers: null, budget: null, vibe: null, dates: null };
 
+// localStorage persistence — saved trips, bookings, and the user's home
+// constraints survive refreshes and redeploys. Versioned in case the trip
+// shape changes incompatibly later: bump SAVED_STORAGE_VERSION to silently
+// reset stale data instead of crashing the read.
+const SAVED_STORAGE_KEY = "trvlplnr.saved.v1";
+const BOOKINGS_STORAGE_KEY = "trvlplnr.bookings.v1";
+const CONSTRAINTS_STORAGE_KEY = "trvlplnr.constraints.v1";
+
+function readJSON(key, fallback) {
+  if (typeof window === "undefined" || !window.localStorage) return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJSON(key, value) {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Quota exceeded or private-mode Safari — silently drop. Better to lose
+    // persistence than break the UI on every save.
+  }
+}
+
+function loadSavedFromStorage() {
+  const persisted = readJSON(SAVED_STORAGE_KEY, null);
+  if (Array.isArray(persisted)) return persisted;
+  // First visit: seed with the demo trips. Mark each archived:false up front
+  // so the type matches what the rest of the app expects.
+  return SAVED_TRIPS.map((t) => ({ ...t, archived: false }));
+}
+
+function loadBookingsFromStorage() {
+  const persisted = readJSON(BOOKINGS_STORAGE_KEY, null);
+  if (Array.isArray(persisted)) return persisted;
+  return [];
+}
+
+function loadConstraintsFromStorage() {
+  const persisted = readJSON(CONSTRAINTS_STORAGE_KEY, null);
+  if (persisted && typeof persisted === "object") {
+    return { ...EMPTY_CONSTRAINTS, ...persisted };
+  }
+  return EMPTY_CONSTRAINTS;
+}
+
 export default function App() {
   const [view, setView] = useState("landing");
   const [prompt, setPrompt] = useState("");
-  const [constraints, setConstraints] = useState(EMPTY_CONSTRAINTS);
+  const [constraints, setConstraints] = useState(() => loadConstraintsFromStorage());
   const [thinkStep, setThinkStep] = useState(0);
   const [pipeIdx, setPipeIdx] = useState(0);
   const [inspect, setInspect] = useState(null);
@@ -81,8 +133,8 @@ export default function App() {
   const [book, setBook] = useState(null);
   const [trip, setTrip] = useState(MOCK_TRIP);
 
-  const [saved, setSaved] = useState(SAVED_TRIPS.map(t => ({ ...t, archived: false })));
-  const [bookings, setBookings] = useState([]);
+  const [saved, setSaved] = useState(() => loadSavedFromStorage());
+  const [bookings, setBookings] = useState(() => loadBookingsFromStorage());
   const [planPopupOpen, setPlanPopupOpen] = useState(false);
   const [noMatchPrompt, setNoMatchPrompt] = useState(null);
   const [savedCurrentTrip, setSavedCurrentTrip] = useState(false);
@@ -163,6 +215,19 @@ export default function App() {
   }, [view, thinkStep]);
 
   // Wait for both the animation AND the AI request before transitioning
+  // Persist user data to localStorage whenever it changes so trips,
+  // bookings, and the home ZIP / vibe / etc. survive refreshes and
+  // redeploys.
+  useEffect(() => {
+    writeJSON(SAVED_STORAGE_KEY, saved);
+  }, [saved]);
+  useEffect(() => {
+    writeJSON(BOOKINGS_STORAGE_KEY, bookings);
+  }, [bookings]);
+  useEffect(() => {
+    writeJSON(CONSTRAINTS_STORAGE_KEY, constraints);
+  }, [constraints]);
+
   // to the plan view. If the AI errored and we have no local trip,
   // surface the NoMatchModal instead.
   useEffect(() => {

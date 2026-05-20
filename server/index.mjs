@@ -17,6 +17,13 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 // almost certainly waiting on the Render free-plan dyno to wake up.
 const BOOT_TIME = Date.now();
 
+// Render injects RENDER_GIT_COMMIT on each deploy. Use it (and the branch /
+// service name) so /api/health can prove which build is live. Locally we
+// fall back to "dev".
+const GIT_COMMIT = (process.env.RENDER_GIT_COMMIT || "dev").slice(0, 7);
+const GIT_BRANCH = process.env.RENDER_GIT_BRANCH || "dev";
+const SERVICE_NAME = process.env.RENDER_SERVICE_NAME || "trvlplnnr-api";
+
 if (!process.env.ANTHROPIC_API_KEY) {
   console.warn(
     "[trvlplnr-api] ANTHROPIC_API_KEY is not set. Requests to /api/plan-trip will fail.",
@@ -34,6 +41,13 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     model: "claude-sonnet-4-6",
     duffel: isDuffelConfigured() ? "enabled" : "disabled",
+    version: {
+      commit: GIT_COMMIT,
+      branch: GIT_BRANCH,
+      service: SERVICE_NAME,
+      booted_at: new Date(BOOT_TIME).toISOString(),
+      uptime_seconds: Math.round((Date.now() - BOOT_TIME) / 1000),
+    },
   });
 });
 
