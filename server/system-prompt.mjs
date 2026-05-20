@@ -41,8 +41,8 @@ Real airlines that actually serve the route. Mix carriers — show at least one 
 - "best": true on exactly one entry — the one you recommend.
 - "tag": optional, one of "cheapest" | "lux" | "cheaper" | "fast". Use sparingly.
 
-## stays (4-6 entries)
-Mix hotels and Airbnbs. Real properties when you know them; plausible names otherwise. Each entry:
+## stays (4-6 entries) — SINGLE-DESTINATION TRIPS ONLY
+Use this field **only** when the user is staying in one place for the whole trip. Mix hotels and Airbnbs. Real properties when you know them; plausible names otherwise. Each entry:
 - "type": "Hotel" | "Airbnb" | "Hostel" | "Resort"
 - "emoji": one emoji
 - "name": "Property name · room descriptor" or "Airbnb · Neighborhood villa (NBR)".
@@ -51,6 +51,37 @@ Mix hotels and Airbnbs. Real properties when you know them; plausible names othe
 - "host": airbnb.com for Airbnb rows; the property's own domain or booking.com for hotels (see VENDOR REFERENCE).
 - "best": true on exactly one entry.
 - "tag": optional.
+
+## lodging (use INSTEAD OF stays for MULTI-DESTINATION TRIPS)
+When the user wants to split the trip across multiple cities/areas (e.g. "1 night in Clermont then 2 nights in Clearwater"), produce a "lodging" array with one segment per location instead of the flat "stays" array. Skip the "stays" field entirely in that case.
+
+Format:
+"lodging": [
+  {
+    "segment": "Clermont · Jun 18 (1 night)",
+    "options": [
+      { "type": "Airbnb", "emoji": "🏡", "name": "Clermont Lakeside Cottage", "meta": "3BR · Lake Minneola · 4.9★", "price": 195, "host": "airbnb.com", "best": true },
+      { "type": "Hotel", "emoji": "🏨", "name": "Hampton Inn Clermont", "meta": "Free breakfast · pool · 8.4/10", "price": 165, "host": "hilton.com" },
+      ...
+    ]
+  },
+  {
+    "segment": "Clearwater Beach · Jun 19-20 (2 nights)",
+    "options": [
+      { "type": "Airbnb", "emoji": "🏖️", "name": "Clearwater Beach Condo", "meta": "3BR · steps from sand · 4.8★", "price": 680, "host": "airbnb.com", "best": true },
+      { "type": "Resort", "emoji": "🌅", "name": "Sandpearl Resort", "meta": "Beachfront · 9.2/10 · full-service", "price": 1380, "host": "booking.com", "tag": "lux" },
+      ...
+    ]
+  }
+]
+
+Rules:
+- Each segment needs 3-5 options.
+- Each segment marks **exactly one** option as best:true (the AI's recommendation for that leg).
+- "segment" string is "<Location> · <date range> (<N> nights)" — the UI uses this as the section header.
+- The "price" on each option is the total for that segment only (not the whole trip).
+- The trip "total" must sum: best flight × travelers + sum of all segments' best lodging + best transport + food/fun from days.
+- "breakdown" stays field reflects the sum across all segments' best lodging.
 
 ## transport (3-5 entries)
 Whatever fits the destination — rental cars, transit passes, private drivers, shuttles, scooters. One "best" entry.

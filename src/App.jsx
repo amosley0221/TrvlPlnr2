@@ -211,16 +211,27 @@ export default function App() {
     setSwap({ kind });
   };
 
-  // Side-panel "see more choices" button — kind is already the key.
-  const onSwapKind = (kind) => setSwap({ kind });
+  // Side-panel "see more choices" button. `opts` carries optional
+  // {segmentIndex} for multi-segment lodging — we need to know which leg.
+  const onSwapKind = (kind, opts = {}) => setSwap({ kind, ...opts });
 
   // Commit a swap: update the trip's selection for that kind and let
   // recomputeTripForSelection recalculate total / breakdown / events.
+  // For multi-segment lodging, swap.kind === "lodging" plus a segmentIndex;
+  // we write into selection.lodging[segmentIndex] rather than selection.lodging.
   const applySwap = (_option, index) => {
     if (!swap) return setSwap(null);
     setTrip((t) => {
-      const sel = { ...(t.selection || initialSelection(t)), [swap.kind]: index };
-      return recomputeTripForSelection(t, sel);
+      const base = t.selection || initialSelection(t);
+      let nextSel;
+      if (swap.kind === "lodging" && typeof swap.segmentIndex === "number") {
+        const lodging = [...((base && base.lodging) || [])];
+        lodging[swap.segmentIndex] = index;
+        nextSel = { ...(base || {}), lodging };
+      } else {
+        nextSel = { ...(base || {}), [swap.kind]: index };
+      }
+      return recomputeTripForSelection(t, nextSel);
     });
     setSwap(null);
   };
@@ -386,8 +397,20 @@ export default function App() {
 
       <SwapModal
         kind={swap?.kind}
-        options={swap?.kind ? trip?.bookingOptions?.[swap.kind] : null}
-        selectedIndex={swap?.kind ? trip?.selection?.[swap.kind] : 0}
+        options={
+          !swap?.kind
+            ? null
+            : swap.kind === "lodging"
+              ? trip?.bookingOptions?.lodging?.[swap.segmentIndex ?? 0]?.options
+              : trip?.bookingOptions?.[swap.kind]
+        }
+        selectedIndex={
+          !swap?.kind
+            ? 0
+            : swap.kind === "lodging"
+              ? trip?.selection?.lodging?.[swap.segmentIndex ?? 0] ?? 0
+              : trip?.selection?.[swap.kind] ?? 0
+        }
         trip={trip}
         onClose={() => setSwap(null)}
         onChoose={applySwap}

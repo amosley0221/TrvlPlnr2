@@ -328,31 +328,36 @@
 .trip-popup {
   width: min(720px, 100%);
   max-height: 90vh;
-  overflow-y: auto;
   position: relative;
+  /* Outer card clips the rounded corners. The actual scrolling happens
+     inside .trip-popup-scroller, so the scrollbar is fully clipped to
+     the rounded radius and can't visually extend past it. */
+  overflow: hidden;
+  padding: 0;
+}
+.trip-popup-scroller {
+  max-height: 90vh;
+  overflow-y: auto;
   padding: 28px 28px 24px;
-  /* Override the chunky site-wide coral scrollbar inside the popup —
-     it visually extends past the rounded corners and looks broken. */
   scrollbar-width: thin;
   scrollbar-color: var(--ink-2) transparent;
 }
-.trip-popup::-webkit-scrollbar {
+.trip-popup-scroller::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.trip-popup::-webkit-scrollbar-track {
+.trip-popup-scroller::-webkit-scrollbar-track {
   background: transparent;
   border-left: 0;
 }
-.trip-popup::-webkit-scrollbar-thumb {
+.trip-popup-scroller::-webkit-scrollbar-thumb {
   background: var(--ink-2);
   border: 2px solid var(--paper);
   border-radius: 999px;
   background-clip: padding-box;
   box-shadow: none;
 }
-.trip-popup::-webkit-scrollbar-thumb:hover { background: var(--ink); }
-.trip-popup::-webkit-scrollbar-thumb:active { background: var(--ink); }
+.trip-popup-scroller::-webkit-scrollbar-thumb:hover { background: var(--ink); }
 .popup-close {
   position: absolute; top: 14px; right: 14px;
   width: 36px; height: 36px; border-radius: 50%;
@@ -361,6 +366,7 @@
   box-shadow: var(--shadow-hard-sm);
   display: grid; place-items: center;
   transition: transform 120ms cubic-bezier(.4,1.6,.6,1);
+  z-index: 3;
 }
 .popup-close:hover { transform: rotate(90deg); background: var(--coral); color: white; }
 
@@ -617,8 +623,11 @@
 }
 .popup-link-cta {
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px; font-weight: 700; color: var(--coral);
+  font-size: 10px; font-weight: 700; color: var(--coral);
   white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .popup-disclaimer {

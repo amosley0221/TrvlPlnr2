@@ -609,11 +609,16 @@ export function initialSelection(trip) {
     const i = arr.findIndex((o) => o && o.best);
     return i >= 0 ? i : 0;
   };
-  return {
+  const sel = {
     flights: pick(opts.flights),
     stays: pick(opts.stays),
     transport: pick(opts.transport),
   };
+  // Multi-segment lodging (a trip split across cities). One index per segment.
+  if (Array.isArray(opts.lodging) && opts.lodging.length > 0) {
+    sel.lodging = opts.lodging.map((seg) => pick(seg?.options));
+  }
+  return sel;
 }
 
 function reverseRoute(route) {
@@ -708,39 +713,71 @@ function applyTransportToEvents(days, transport) {
   }));
 }
 
+// Sum lodging prices across segments using a selection-index array.
+function sumLodging(lodgingSegments, indicesByBest) {
+  if (!Array.isArray(lodgingSegments)) return 0;
+  return lodgingSegments.reduce((total, seg, i) => {
+    const opts = seg?.options || [];
+    let pick;
+    if (indicesByBest === "best") {
+      pick = opts.find((o) => o.best) || opts[0];
+    } else {
+      const idx = (indicesByBest && indicesByBest[i]) ?? 0;
+      pick = opts[idx];
+    }
+    return total + (pick?.price || 0);
+  }, 0);
+}
+
 export function recomputeTripForSelection(baseTrip, selection) {
   if (!baseTrip?.bookingOptions || !selection) return baseTrip;
 
   const opts = baseTrip.bookingOptions;
   const flight = opts.flights?.[selection.flights];
-  const stay = opts.stays?.[selection.stays];
   const transport = opts.transport?.[selection.transport];
-  if (!flight || !stay || !transport) return baseTrip;
+  if (!flight || !transport) return baseTrip;
 
-  // Baseline is the "best fit" entry — that's what trip.total currently
-  // reflects when the trip first comes out of the AI or local matcher.
-  const baseFlight = opts.flights.find((o) => o.best) || opts.flights[0];
-  const baseStay = opts.stays.find((o) => o.best) || opts.stays[0];
-  const baseTransport = opts.transport.find((o) => o.best) || opts.transport[0];
+  const multiSeg = Array.isArray(opts.lodging) && opts.lodging.length > 0;
 
-  // If the trip already has a selection attached (saved trip being
-  // re-opened), normalize the baseline back to "best fit" by reversing
-  // out the prior selection's delta before applying the new one.
+  // Single-stay trip: behave like before. Multi-segment lodging: sum across
+  // segments and treat the first segment's pick as the "primary" stay for
+  // day-event updates (the rest stay narrative-only).
+  let stayTotal, baseStayTotal, prevStayTotal, stayForEvents;
   const prev = baseTrip.selection || initialSelection(baseTrip);
-  const prevFlight = opts.flights[prev.flights] || baseFlight;
-  const prevStay = opts.stays[prev.stays] || baseStay;
-  const prevTransport = opts.transport[prev.transport] || baseTransport;
+
+  if (multiSeg) {
+    const lodgingSel = selection.lodging || opts.lodging.map(() => 0);
+    const prevLodgingSel = prev?.lodging || opts.lodging.map(() => 0);
+    stayTotal = sumLodging(opts.lodging, lodgingSel);
+    baseStayTotal = sumLodging(opts.lodging, "best");
+    prevStayTotal = sumLodging(opts.lodging, prevLodgingSel);
+    stayForEvents = opts.lodging[0]?.options?.[lodgingSel[0] ?? 0];
+  } else {
+    const stay = opts.stays?.[selection.stays];
+    if (!stay) return baseTrip;
+    const baseStay = opts.stays.find((o) => o.best) || opts.stays[0];
+    const prevStay = opts.stays[prev?.stays ?? 0] || baseStay;
+    stayTotal = stay.price;
+    baseStayTotal = baseStay.price;
+    prevStayTotal = prevStay.price;
+    stayForEvents = stay;
+  }
+
+  const baseFlight = opts.flights.find((o) => o.best) || opts.flights[0];
+  const baseTransport = opts.transport.find((o) => o.best) || opts.transport[0];
+  const prevFlight = opts.flights[prev?.flights ?? 0] || baseFlight;
+  const prevTransport = opts.transport[prev?.transport ?? 0] || baseTransport;
 
   const travelers = baseTrip.travelers || 1;
   const revert =
     (baseFlight.price - prevFlight.price) * travelers +
-    (baseStay.price - prevStay.price) +
+    (baseStayTotal - prevStayTotal) +
     (baseTransport.price - prevTransport.price);
   const baselineTotal = baseTrip.total + revert;
 
   const delta =
     (flight.price - baseFlight.price) * travelers +
-    (stay.price - baseStay.price) +
+    (stayTotal - baseStayTotal) +
     (transport.price - baseTransport.price);
 
   const total = baselineTotal + delta;
@@ -748,14 +785,14 @@ export function recomputeTripForSelection(baseTrip, selection) {
 
   const breakdown = (baseTrip.breakdown || []).map((b) => {
     if (b.key === "flights") return { ...b, val: flight.price * travelers };
-    if (b.key === "stay") return { ...b, val: stay.price };
+    if (b.key === "stay") return { ...b, val: stayTotal };
     if (b.key === "car") return { ...b, val: transport.price };
     return b;
   });
 
   let days = baseTrip.days || [];
   days = applyFlightToEvents(days, flight);
-  days = applyStayToEvents(days, stay);
+  if (stayForEvents) days = applyStayToEvents(days, stayForEvents);
   days = applyTransportToEvents(days, transport);
 
   return { ...baseTrip, total, perPerson, breakdown, days, selection };

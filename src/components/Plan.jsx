@@ -249,6 +249,12 @@ export function TripPlanModal({
 
   const pick = (key, index) =>
     setSelection((s) => ({ ...(s || {}), [key]: index }));
+  const pickLodging = (segIdx, optIdx) =>
+    setSelection((s) => {
+      const lodging = [...((s && s.lodging) || [])];
+      lodging[segIdx] = optIdx;
+      return { ...(s || {}), lodging };
+    });
 
   const handleSave = () => onSave && onSave(effective);
   const handleArchive = () => onArchive && onArchive(effective);
@@ -272,6 +278,8 @@ export function TripPlanModal({
         <button className="popup-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
+
+        <div className="trip-popup-scroller">
 
         <div className="popup-hero">
           <span className="popup-hero-emoji">{effective.hero}</span>
@@ -306,18 +314,36 @@ export function TripPlanModal({
               onPick={pick}
               trip={effective}
             />
-            <PopupSection
-              icon="🏨"
-              title="Where you'll stay"
-              sub="Pick one · hotels + Airbnbs"
-              items={opts.stays}
-              category="hotel"
-              defaultEmoji="🏨"
-              selectionKey="stays"
-              selectedIndex={selection?.stays}
-              onPick={pick}
-              trip={effective}
-            />
+            {opts.lodging && opts.lodging.length > 0 ? (
+              opts.lodging.map((seg, i) => (
+                <PopupSection
+                  key={`lodging-${i}`}
+                  icon="🏨"
+                  title={`Where you'll stay — ${seg.segment || `leg ${i + 1}`}`}
+                  sub={`Pick one · ${seg.options?.length || 0} option${(seg.options?.length || 0) === 1 ? "" : "s"}`}
+                  items={seg.options || []}
+                  category="hotel"
+                  defaultEmoji="🏨"
+                  selectionKey={`lodging:${i}`}
+                  selectedIndex={(selection?.lodging || [])[i] ?? 0}
+                  onPick={(_key, idx) => pickLodging(i, idx)}
+                  trip={effective}
+                />
+              ))
+            ) : (
+              <PopupSection
+                icon="🏨"
+                title="Where you'll stay"
+                sub="Pick one · hotels + Airbnbs"
+                items={opts.stays}
+                category="hotel"
+                defaultEmoji="🏨"
+                selectionKey="stays"
+                selectedIndex={selection?.stays}
+                onPick={pick}
+                trip={effective}
+              />
+            )}
             <PopupSection
               icon="🚗"
               title="Getting around"
@@ -400,6 +426,8 @@ export function TripPlanModal({
             Refine the plan first →
           </button>
         </div>
+
+        </div>{/* /trip-popup-scroller */}
       </div>
     </div>
   );
@@ -712,10 +740,21 @@ export function BookingsSummary({
   const [pdfLoading, setPdfLoading] = useState(false);
 
   if (!trip?.bookingOptions || !trip?.selection) return null;
-  const flight = trip.bookingOptions.flights?.[trip.selection.flights];
-  const stay = trip.bookingOptions.stays?.[trip.selection.stays];
-  const transport = trip.bookingOptions.transport?.[trip.selection.transport];
-  if (!flight || !stay || !transport) return null;
+  const opts = trip.bookingOptions;
+  const sel = trip.selection;
+  const flight = opts.flights?.[sel.flights];
+  const transport = opts.transport?.[sel.transport];
+  const multiSeg = Array.isArray(opts.lodging) && opts.lodging.length > 0;
+  const stay = multiSeg ? null : opts.stays?.[sel.stays];
+  if (!flight || !transport) return null;
+  if (!multiSeg && !stay) return null;
+  const lodgingPicks = multiSeg
+    ? opts.lodging.map((seg, i) => ({
+        segment: seg,
+        i,
+        opt: seg.options?.[(sel.lodging || [])[i] ?? 0],
+      }))
+    : [];
 
   const handleExport = async () => {
     if (pdfLoading) return;
@@ -746,15 +785,32 @@ export function BookingsSummary({
         bookingUrl={buildBookingUrl(flight, trip)}
         onSeeMore={() => onOpenSwap("flights")}
       />
-      <BookedRow
-        emoji={stay.emoji || "🏨"}
-        title={stay.name}
-        meta={`${stay.type} · ${stay.meta}`}
-        price={fmtMoney(stay.price)}
-        host={stay.host}
-        bookingUrl={buildBookingUrl(stay, trip)}
-        onSeeMore={() => onOpenSwap("stays")}
-      />
+      {multiSeg
+        ? lodgingPicks.map(({ segment, i, opt }) =>
+            opt ? (
+              <BookedRow
+                key={`lodging-${i}`}
+                emoji={opt.emoji || "🏨"}
+                title={opt.name}
+                meta={`${segment.segment || `Leg ${i + 1}`} · ${opt.meta}`}
+                price={fmtMoney(opt.price)}
+                host={opt.host}
+                bookingUrl={buildBookingUrl(opt, trip)}
+                onSeeMore={() => onOpenSwap("lodging", { segmentIndex: i })}
+              />
+            ) : null,
+          )
+        : (
+            <BookedRow
+              emoji={stay.emoji || "🏨"}
+              title={stay.name}
+              meta={`${stay.type} · ${stay.meta}`}
+              price={fmtMoney(stay.price)}
+              host={stay.host}
+              bookingUrl={buildBookingUrl(stay, trip)}
+              onSeeMore={() => onOpenSwap("stays")}
+            />
+          )}
       <BookedRow
         emoji="🚗"
         title={transport.name}
