@@ -728,6 +728,20 @@
   font-size: 15px;
   white-space: nowrap;
 }
+.booked-actions-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1.5px dashed var(--line);
+}
+.booked-action-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  text-align: center;
+}
+.booked-action-btn:disabled { opacity: 0.55; cursor: default; }
 
 /* ============ SAVED-TRIP ACTIONS ============ */
 .saved-card { position: relative; }

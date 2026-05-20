@@ -80,7 +80,7 @@ export function Thinking({ prompt, constraints, thinkStep, pipeIdx }) {
   );
 }
 
-export function PlanView({ trip, locks, toggleLock, onSwap, onSwapKind, refine, setRefine, onApplyRefine, onBook, onInspect }) {
+export function PlanView({ trip, locks, toggleLock, onSwap, onSwapKind, refine, setRefine, onApplyRefine, onBook, onInspect, onSave, onArchive, alreadySaved, alreadyArchived }) {
   return (
     <>
       <TripHeader trip={trip} />
@@ -91,7 +91,14 @@ export function PlanView({ trip, locks, toggleLock, onSwap, onSwapKind, refine, 
           ))}
         </div>
         <aside className="side">
-          <BookingsSummary trip={trip} onOpenSwap={onSwapKind} />
+          <BookingsSummary
+            trip={trip}
+            onOpenSwap={onSwapKind}
+            onSave={onSave}
+            onArchive={onArchive}
+            alreadySaved={alreadySaved}
+            alreadyArchived={alreadyArchived}
+          />
           <CostBreakdown trip={trip} />
           <div className="side-card sky">
             <h3>Stats</h3>

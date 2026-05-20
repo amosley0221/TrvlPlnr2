@@ -332,6 +332,10 @@ export default function App() {
             onApplyRefine={onApplyRefine}
             onBook={() => setBook("choose")}
             onInspect={setInspect}
+            onSave={(effective) => handleSaveCurrent(effective, { archived: false })}
+            onArchive={(effective) => handleSaveCurrent(effective, { archived: true })}
+            alreadySaved={savedCurrentTrip}
+            alreadyArchived={archivedCurrentTrip}
           />
         )}
         {view === "saved" && (

@@ -11,8 +11,14 @@ import {
   Text,
   StyleSheet,
   Link,
-  Font,
 } from "@react-pdf/renderer";
+
+// NOTE: deliberately not registering Fraunces / Inter from Google Fonts.
+// react-pdf fetches font files at render time (not at Font.register), and
+// any CORS/network blip throws inside pdf().toBlob(), surfacing as
+// "Couldn't generate the PDF" to the user. We use the built-in PDF fonts
+// (Helvetica, Times-Roman, Times-Bold) instead — less brand-matched but
+// 100% reliable since the fonts are baked into every PDF reader.
 
 // Brand palette — keep in sync with :root in styles.css.
 const C = {
@@ -33,23 +39,11 @@ const C = {
   bubblegum: "#ff7ac6",
 };
 
-// Register the same display fonts the site uses so the PDF matches.
-// Fraunces (serif display) for headings, Inter for body text.
-Font.register({
-  family: "Fraunces",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/fraunces/v37/6NUh8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChjdfeQ7ZXk8kD6.ttf", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/fraunces/v37/6NUh8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChjdfeQ7ZXk8kD6.ttf", fontWeight: 700 },
-  ],
-});
-Font.register({
-  family: "Inter",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIa1ZL7W0Q5nw.ttf", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIa1ZL7SUc.ttf", fontWeight: 700 },
-    { src: "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIa1ZL7Wkc.ttf", fontWeight: 800 },
-  ],
-});
+// Aliases mapped to built-in PDF fonts. Keeps the rest of the stylesheet
+// readable while ensuring the font is always available.
+const SERIF = "Times-Bold";
+const SANS = "Helvetica";
+const SANS_BOLD = "Helvetica-Bold";
 
 const s = StyleSheet.create({
   page: {
@@ -57,7 +51,7 @@ const s = StyleSheet.create({
     paddingBottom: 60,
     backgroundColor: C.bg,
     color: C.ink,
-    fontFamily: "Inter",
+    fontFamily: SANS,
     fontSize: 10,
     lineHeight: 1.4,
   },
@@ -70,13 +64,13 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
   brand: {
-    fontFamily: "Fraunces",
+    fontFamily: SERIF,
     fontSize: 20,
     fontWeight: 700,
     color: C.ink,
   },
   brandTag: {
-    fontFamily: "Inter",
+    fontFamily: SANS,
     fontSize: 8,
     color: C.muted,
     textTransform: "uppercase",
@@ -114,7 +108,7 @@ const s = StyleSheet.create({
     marginBottom: 2,
   },
   heroTitle: {
-    fontFamily: "Fraunces",
+    fontFamily: SERIF,
     fontSize: 22,
     fontWeight: 700,
     lineHeight: 1.15,
@@ -137,7 +131,7 @@ const s = StyleSheet.create({
     marginBottom: 2,
   },
   heroTotalNum: {
-    fontFamily: "Fraunces",
+    fontFamily: SERIF,
     fontSize: 20,
     fontWeight: 700,
     lineHeight: 1,
@@ -153,7 +147,7 @@ const s = StyleSheet.create({
     marginBottom: 6,
   },
   sectionTitle: {
-    fontFamily: "Fraunces",
+    fontFamily: SERIF,
     fontSize: 14,
     fontWeight: 700,
   },
@@ -184,7 +178,7 @@ const s = StyleSheet.create({
   rowTitle: { fontSize: 10, fontWeight: 700 },
   rowMeta: { fontSize: 8, color: C.ink2 },
   rowPrice: {
-    fontFamily: "Fraunces",
+    fontFamily: SERIF,
     fontSize: 12,
     fontWeight: 700,
     marginRight: 8,
@@ -226,7 +220,7 @@ const s = StyleSheet.create({
     marginRight: 6,
   },
   dayTitleRow: { flexDirection: "row", alignItems: "center" },
-  dayTitle: { fontFamily: "Fraunces", fontSize: 13, fontWeight: 700 },
+  dayTitle: { fontFamily: SERIF, fontSize: 13, fontWeight: 700 },
   dayLabel: { fontSize: 9, color: C.ink2 },
   event: {
     flexDirection: "row",

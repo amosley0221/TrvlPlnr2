@@ -29,16 +29,17 @@ function shortDateToISO(short) {
   return `${year}-${String(monthIdx + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function extractRouteOrigin(route) {
-  if (!route) return null;
-  const m = String(route).match(/\b([A-Z]{3})\b/);
-  return m ? m[1] : null;
-}
-
-function extractRouteDest(route) {
-  if (!route) return null;
-  const all = String(route).match(/\b[A-Z]{3}\b/g);
-  return all && all.length ? all[all.length - 1] : null;
+function extractRoutePair(route) {
+  if (!route) return [null, null];
+  const codes = String(route).match(/\b[A-Z]{3}\b/g) || [];
+  // Require BOTH endpoints. Otherwise "Your hub → MCO" would yield
+  // origin=MCO/dest=MCO and the deep-link would send the user to a
+  // same-airport round-trip search that 404s or errors on every carrier.
+  if (codes.length < 2) return [null, null];
+  const origin = codes[0];
+  const dest = codes[codes.length - 1];
+  if (origin === dest) return [null, null];
+  return [origin, dest];
 }
 
 // Skyscanner uses YYMMDD (6-digit, no dashes) in its URL segments.
@@ -111,51 +112,11 @@ const AIRLINE_BOOKERS = [
     build: (o, d, dep, ret, n) =>
       `https://www.aircanada.com/bookings/flights/search?org0=${o}&dest0=${d}&departureDate0=${dep}${ret ? `&org1=${d}&dest1=${o}&departureDate1=${ret}` : ""}&adt=${n}`,
   },
-  {
-    match: /\bbritishairways\.com\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://www.britishairways.com/travel/flightsearch/public/en_us?eId=199001&departingFrom=${o}&travellingTo=${d}&travelOutDate=${dep}${ret ? `&travelInDate=${ret}` : ""}&adults=${n}&class=economy`,
-  },
-  {
-    match: /\bairfrance\.com\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://wwws.airfrance.us/search/offers?bookingFlow=LEISURE&pax=${n}.0.0.0.0.0.0&cabin=ECONOMY&connections=${o},${d},${dep}${ret ? `_${d},${o},${ret}` : ""}`,
-  },
-  {
-    match: /\bklm\.com\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://www.klm.com/search/offers?bookingFlow=LEISURE&pax=${n}.0.0.0.0.0.0&cabin=ECONOMY&connections=${o},${d},${dep}${ret ? `_${d},${o},${ret}` : ""}`,
-  },
-  {
-    match: /\blufthansa\.com\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://www.lufthansa.com/us/en/flight-search?origin=${o}&destination=${d}&departure=${dep}${ret ? `&return=${ret}` : ""}&adt=${n}&cl=Y`,
-  },
-  {
-    match: /\biberia\.com\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://www.iberia.com/us/online-checkin/?segments=${o}-${d}-${dep}${ret ? `,${d}-${o}-${ret}` : ""}&adults=${n}`,
-  },
-  {
-    match: /\bflytap\.com\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://book.flytap.com/booking/flights?origin=${o}&destination=${d}&outboundDate=${dep}${ret ? `&inboundDate=${ret}` : ""}&adults=${n}`,
-  },
-  {
-    match: /\bana\.co\.jp\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://aswbe-i.ana.co.jp/international_asw/pages/award/search/roundtrip/award_search_roundtrip_input.xhtml?DEPARTURE_AIRPORT_CODE=${o}&ARRIVAL_AIRPORT_CODE=${d}&DEPARTURE_DATE=${dep}${ret ? `&RETURN_DATE=${ret}` : ""}&ADULT_PASSENGER_NUM=${n}`,
-  },
-  {
-    match: /\bjal\.co\.jp\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://www.jal.co.jp/jp/en/inter/booking/?from=${o}&to=${d}&depart=${dep}${ret ? `&return=${ret}` : ""}&adults=${n}`,
-  },
-  {
-    match: /\bsingaporeair\.com\b/,
-    build: (o, d, dep, ret, n) =>
-      `https://www.singaporeair.com/en_UK/flight-search/?journeyType=${ret ? "R" : "O"}&from=${o}&to=${d}&departureDate=${dep}${ret ? `&returnDate=${ret}` : ""}&adultPassengerCount=${n}`,
-  },
+  // International carriers (BA, Iberia, Lufthansa, AF, KLM, TAP, ANA, JAL,
+  // Singapore, etc.) intentionally fall through to Skyscanner. Their deep-
+  // link URLs change too often and frequently land on a wrong page (e.g.
+  // Iberia's check-in path). Skyscanner shows the same route + dates and
+  // includes the carrier among its results.
 ];
 
 export function buildBookingUrl(opt, trip) {
@@ -170,8 +131,7 @@ export function buildBookingUrl(opt, trip) {
   // Google Maps which benefits from a real directions URL.
   if (!opt.route) return fallback;
 
-  const origin = extractRouteOrigin(opt.route);
-  const dest = extractRouteDest(opt.route);
+  const [origin, dest] = extractRoutePair(opt.route);
   if (!origin || !dest) return fallback;
 
   // Drive options → Google Maps directions with the route's airport codes.

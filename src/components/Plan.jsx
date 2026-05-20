@@ -226,6 +226,18 @@ export function TripPlanModal({
     if (open) setSelection(trip?.selection || initialSelection(trip));
   }, [open, trip?.id]);
 
+  // Lock body scroll while the popup is open — otherwise the page's
+  // chunky coral scrollbar shows through to the right of the modal and
+  // makes it look like the popup's own scrollbar is extending.
+  useEffect(() => {
+    if (!open) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   if (!open || !trip) return null;
   const opts = trip.bookingOptions;
   const legacyLinks = !opts ? extractBookingLinks(trip) : [];
@@ -689,7 +701,14 @@ export function SwapModal({ kind, options, selectedIndex, onClose, onChoose, tri
 
 // Side-panel summary of the trip's currently-selected bookings, with a
 // "see more choices" link per category that opens the SwapModal.
-export function BookingsSummary({ trip, onOpenSwap }) {
+export function BookingsSummary({
+  trip,
+  onOpenSwap,
+  onSave,
+  onArchive,
+  alreadySaved,
+  alreadyArchived,
+}) {
   const [pdfLoading, setPdfLoading] = useState(false);
 
   if (!trip?.bookingOptions || !trip?.selection) return null;
@@ -746,14 +765,33 @@ export function BookingsSummary({ trip, onOpenSwap }) {
         onSeeMore={() => onOpenSwap("transport")}
       />
 
-      <button
-        className="btn btn-primary"
-        style={{ marginTop: 10, width: "100%" }}
-        onClick={handleExport}
-        disabled={pdfLoading}
-      >
-        {pdfLoading ? "Preparing PDF…" : "📄 Export PDF to share"}
-      </button>
+      <div className="booked-actions-row">
+        {onSave && (
+          <button
+            className="btn btn-accent booked-action-btn"
+            onClick={() => onSave(trip)}
+            disabled={alreadySaved}
+          >
+            {alreadySaved ? "✓ Saved" : "💾 Save"}
+          </button>
+        )}
+        {onArchive && (
+          <button
+            className="btn btn-ghost booked-action-btn"
+            onClick={() => onArchive(trip)}
+            disabled={alreadyArchived}
+          >
+            {alreadyArchived ? "✓ Archived" : "🗄 Archive"}
+          </button>
+        )}
+        <button
+          className="btn btn-ghost booked-action-btn"
+          onClick={handleExport}
+          disabled={pdfLoading}
+        >
+          {pdfLoading ? "Preparing…" : "📄 PDF"}
+        </button>
+      </div>
     </div>
   );
 }
