@@ -12,6 +12,11 @@ import {
 const PORT = Number(process.env.PORT) || 8787;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
+// Captured once at boot — used as a "is this a cold start?" hint in
+// per-request timing telemetry. A request received <5s after boot was
+// almost certainly waiting on the Render free-plan dyno to wake up.
+const BOOT_TIME = Date.now();
+
 if (!process.env.ANTHROPIC_API_KEY) {
   console.warn(
     "[trvlplnr-api] ANTHROPIC_API_KEY is not set. Requests to /api/plan-trip will fail.",
@@ -43,8 +48,14 @@ app.post("/api/plan-trip", async (req, res) => {
   }
 
   const userMessage = buildUserMessage(prompt, constraints, today);
+  const t0 = Date.now();
+  const secondsSinceBoot = Math.round((t0 - BOOT_TIME) / 1000);
+  // Heuristic: free-plan dynos boot in ~20-40s. If this is the first request
+  // after a quiet period, the user already waited for the boot itself.
+  const likelyColdStart = secondsSinceBoot < 5;
 
   try {
+    const tClaudeStart = Date.now();
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
       // Adaptive thinking shares this budget with the final JSON output.
@@ -74,15 +85,20 @@ app.post("/api/plan-trip", async (req, res) => {
       ],
       messages: [{ role: "user", content: userMessage }],
     });
+    const claudeMs = Date.now() - tClaudeStart;
 
+    const cacheRead = response.usage.cache_read_input_tokens ?? 0;
+    const cacheCreate = response.usage.cache_creation_input_tokens ?? 0;
     console.log(
-      "[plan-trip] tokens",
+      "[plan-trip] claude",
       JSON.stringify({
+        ms: claudeMs,
         input: response.usage.input_tokens,
         output: response.usage.output_tokens,
-        cache_read: response.usage.cache_read_input_tokens ?? 0,
-        cache_create: response.usage.cache_creation_input_tokens ?? 0,
+        cache_read: cacheRead,
+        cache_create: cacheCreate,
         stop: response.stop_reason,
+        cold: likelyColdStart,
       }),
     );
 
@@ -129,9 +145,25 @@ app.post("/api/plan-trip", async (req, res) => {
 
     // Best-effort enhance the AI's estimated flights with real Duffel offers.
     // Failures here are logged + ignored — the user still gets the AI plan.
+    const tDuffelStart = Date.now();
     const finalTrip = await enhanceWithDuffel(trip, today);
+    const duffelMs = Date.now() - tDuffelStart;
+    const totalMs = Date.now() - t0;
 
-    return res.json({ trip: finalTrip });
+    const timing = {
+      total_ms: totalMs,
+      claude_ms: claudeMs,
+      duffel_ms: duffelMs,
+      cache_read_tokens: cacheRead,
+      cache_create_tokens: cacheCreate,
+      cache_hit: cacheRead > 0,
+      output_tokens: response.usage.output_tokens,
+      likely_cold_start: likelyColdStart,
+      seconds_since_boot: secondsSinceBoot,
+    };
+    console.log("[plan-trip] timing", JSON.stringify(timing));
+
+    return res.json({ trip: finalTrip, timing });
   } catch (err) {
     return handleAnthropicError(err, res);
   }

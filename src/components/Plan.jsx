@@ -9,6 +9,18 @@ import { jsonHighlight } from "./Pipeline.jsx";
 import { exportTripAsPDF } from "../lib/export-pdf.js";
 import { buildBookingUrl } from "../lib/booking-links.js";
 
+// "Mon, Jun 18" → "MON". "Jun 18" → "18". Anything unparseable → "N" where N
+// is 1-based day index (matches the old numbered-bubble behavior).
+function dayBadgeFromLabel(label, idx) {
+  if (typeof label === "string" && label.trim()) {
+    const dow = label.trim().match(/^([A-Za-z]{3,})/);
+    if (dow) return dow[1].slice(0, 3).toUpperCase();
+    const dayNum = label.match(/\b(\d{1,2})\b/);
+    if (dayNum) return dayNum[1];
+  }
+  return String((idx ?? 0) + 1);
+}
+
 export function NoMatchModal({ open, prompt, destinations, onClose, onPick }) {
   if (!open) return null;
   const snippet = (prompt || "").trim();
@@ -551,11 +563,12 @@ function EventRow({ ev, onSwap, locked, onLock, onInspect }) {
 
 export function DayCard({ day, idx, onSwap, locks, toggleLock, onInspect }) {
   const dayCost = day.events.reduce((s, e) => s + (e.cost || 0), 0);
+  const badge = dayBadgeFromLabel(day.label, idx);
   return (
     <div className="day-card">
       <div className="day-head">
         <div className="day-num">
-          <span className="badge">{idx + 1}</span>
+          <span className="badge" title={day.label || `Day ${idx + 1}`}>{badge}</span>
           <span>{day.title}</span>
         </div>
         <div className="day-date">{day.label} · <strong>{fmtMoney(dayCost)}</strong></div>

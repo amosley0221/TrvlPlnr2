@@ -109,6 +109,11 @@ Always exactly these five categories in this order:
 # days (3-6 entries)
 A realistic day-by-day arc: arrival day → middle days → departure day. Each day has 2-5 events.
 
+Each day has:
+- "label": short date in "DOW, Mon DD" form — e.g. "Mon, Jun 18", "Sat, Sep 14". The three-letter weekday is REQUIRED; the UI shows it as the day's badge. Compute the weekday from the trip's start date and the day's index — don't guess.
+- "title": short narrative title for the day — e.g. "Beach + cenote", "Versailles day-trip", "Fly home".
+- "events": array of 2-5 event objects (see below).
+
 Event icon enum: "flight" | "hotel" | "car" | "train" | "bus" | "food" | "fun"
 Event emoji: one emoji per event.
 Event time: "HH:MM" 24-hour.

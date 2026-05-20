@@ -210,17 +210,19 @@ const s = StyleSheet.create({
     borderBottom: `0.5pt dashed ${C.line}`,
   },
   dayNum: {
-    width: 22,
-    height: 22,
+    minWidth: 34,
+    height: 18,
+    paddingHorizontal: 6,
     backgroundColor: C.coral,
     color: "#fff",
-    borderRadius: 11,
+    borderRadius: 9,
     border: `1pt solid ${C.ink}`,
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: 700,
     textAlign: "center",
-    lineHeight: 1.9,
+    lineHeight: 1.6,
     marginRight: 6,
+    letterSpacing: 0.5,
   },
   dayTitleRow: { flexDirection: "row", alignItems: "center" },
   dayTitle: { fontFamily: SERIF, fontSize: 13, fontWeight: 700 },
@@ -317,6 +319,16 @@ const s = StyleSheet.create({
 });
 
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
+
+function dayBadgeFromLabel(label, idx) {
+  if (typeof label === "string" && label.trim()) {
+    const dow = label.trim().match(/^([A-Za-z]{3,})/);
+    if (dow) return dow[1].slice(0, 3).toUpperCase();
+    const dayNum = label.match(/\b(\d{1,2})\b/);
+    if (dayNum) return dayNum[1];
+  }
+  return String((idx ?? 0) + 1);
+}
 
 // react-pdf's built-in Helvetica/Times fonts have no emoji glyphs, so emoji
 // characters in Text nodes rendered as garbage (random "<", "=", ">"). All
@@ -644,7 +656,7 @@ export function TripPDF({ trip }) {
               <View key={i} style={s.dayCard} wrap={false}>
                 <View style={s.dayHead}>
                   <View style={s.dayTitleRow}>
-                    <Text style={s.dayNum}>{i + 1}</Text>
+                    <Text style={s.dayNum}>{dayBadgeFromLabel(day.label, i)}</Text>
                     <Text style={s.dayTitle}>{day.title}</Text>
                   </View>
                   <Text style={s.dayLabel}>{day.label}</Text>
