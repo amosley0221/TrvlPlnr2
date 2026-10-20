@@ -1,0 +1,14 @@
+{
+  "appId": "com.trvlplnr.app",
+  "appName": "TrvlPlnr",
+  "webDir": "dist",
+  "server": {
+    "url": "https://trvlplnr.onrender.com",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#fff7ec"
+  }
+}

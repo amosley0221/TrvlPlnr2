@@ -7,3 +7,20 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Android build (Capacitor regenerates these per CI run — see android/README.md)
+android/app
+android/build
+android/.gradle
+android/local.properties
+android/gradle
+android/gradlew
+android/gradlew.bat
+android/build.gradle
+android/settings.gradle
+android/variables.gradle
+android/gradle.properties
+android/capacitor.settings.gradle
+*.apk
+*.aab
+*.keystore

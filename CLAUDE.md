@@ -98,3 +98,7 @@ All hooks run on every render (Rules of Hooks); behavior is gated inside effects
 ### iOS PWA
 
 `index.html` declares `apple-mobile-web-app-status-bar-style: black-translucent`, which means web content extends *under* the Dynamic Island / status bar. `.nav`, `.main`, and `.footer` use `calc(N + env(safe-area-inset-*))` padding to clear it. `html` and `body` both have `overflow-x: hidden` because a sticky child can otherwise cause horizontal page scrolling in Safari even when only `body` has the rule.
+
+### Android APK
+
+`.github/workflows/android-apk.yml` wraps the deployed PWA in a Capacitor WebView and attaches the resulting APK to a GitHub Release. Triggers on tag push (`v*`) or manual dispatch from the Actions tab. The generated `android/app/` Gradle project is `.gitignore`d — the workflow recreates it from scratch each run with `npx cap add android` using `capacitor.config.json` as source. Without the `ANDROID_KEYSTORE_*` repo secrets configured the APK is debug-signed (sideloadable, no cross-release identity); set them to switch to release signing. See `android/README.md` for the full procedure.
